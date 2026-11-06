@@ -3,8 +3,8 @@ import { computed, nextTick, ref, watch, onMounted, onUnmounted } from 'vue'
 import type { ActivityRecord } from '../domain/bridge'
 import { dayLabel, timeLabel } from '../domain/format'
 import HighlightedText from './HighlightedText.vue'
-const props = defineProps<{ records: ActivityRecord[]; query: string; loading: boolean; more: boolean; enabled: boolean }>()
-const emit = defineEmits<{ detail: [record: ActivityRecord]; more: [] }>()
+const props = defineProps<{ records: ActivityRecord[]; query: string; loading: boolean; more: boolean; enabled: boolean; filtered: boolean; failed: boolean }>()
+const emit = defineEmits<{ detail: [record: ActivityRecord]; more: []; clear: [] }>()
 const viewport = ref<HTMLElement>(), scrollTop = ref(0), height = ref(400), selected = ref(0)
 const rowHeight = 56
 let advanceAfterLoad = false
@@ -41,7 +41,7 @@ defineExpose({ move, openSelected, reset, selectedId })
 </script>
 <template>
   <div class="timeline-scroll" ref="viewport" tabindex="0" role="region" aria-label="历史时间线" @scroll="scrollTop = ($event.target as HTMLElement).scrollTop" @keydown.down.prevent.stop="move(1)" @keydown.up.prevent.stop="move(-1)" @keydown.enter="enterResult">
-    <div v-if="!records.length && !loading" class="empty-state"><h3>{{ enabled ? '未找到历史记录' : '尚未开始记录' }}</h3><p>{{ enabled ? '试试其他关键词或日期。' : '确认隐私说明后即可启用。' }}</p></div>
+    <div v-if="!records.length" class="empty-state"><h3>{{ failed ? '读取历史失败' : loading ? '正在检索…' : enabled ? '未找到历史记录' : '尚未开始记录' }}</h3><p v-if="!loading">{{ failed ? '请根据错误提示重试，不代表本地历史为空。' : enabled ? filtered ? '当前条件没有匹配，试试全部历史。' : '开始记录并切换应用后，历史会出现在这里。' : '确认隐私说明后即可启用。' }}</p><button v-if="filtered && !loading && !failed" class="button subtle" @click="emit('clear')">清除筛选</button></div>
     <div id="history-results" :style="{ height: `${records.length * rowHeight}px`, position: 'relative' }" role="listbox" aria-label="历史搜索结果">
       <button v-for="(item, i) in visible" :key="item.id" :id="`history-result-${item.id}`" role="option" :aria-selected="selected === start + i" :tabindex="selected === start + i ? 0 : -1" class="event-row" :class="{ selected: selected === start + i }" :style="{ top: `${(start + i) * rowHeight}px`, height: `${rowHeight}px` }" @click="selected = start + i; openSelected()" :aria-label="`${item.appName} ${item.windowTitle} 查看详情`">
         <span class="app-avatar" :title="`${item.appName}（应用字母标识）`" aria-hidden="true">{{ item.appName.slice(0, 1).toUpperCase() }}</span>

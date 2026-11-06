@@ -5,6 +5,8 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Restore a fixed 60px shortcut rail with history/search/statistics and bottom recording/settings controls; show query-specific counts and distinguish query failures from empty results.
+- Follow uTools' recommended prefers-color-scheme mechanism automatically with neutral light/dark surfaces; remove the independent theme selector and ignore legacy UI theme overrides.
 - Return the total matching the current search filters independently of pagination, rather than presenting the global database count as a filtered result count. Load saved history even when recording has not been enabled; this does not start capture.
 - Rework the UI as a compact desktop tool: always-visible search and recording controls, 56px result rows, one-line filters, and a secondary menu for settings/statistics/export. Replace the welcome page with inline consent and remove the sidebar and decorative headings.
 - Support keyboard-only page continuation, retain selection across live refresh, focus search on plugin re-entry, and make Esc close menus/details, return from secondary views, clear search, then hide the host window. Paginate secondary panels and long detail titles instead of adding page scrollbars.

@@ -16,9 +16,9 @@ async function installBridge(page, { consent = true, count = 240, longTitle = fa
       start: () => { state = 'recording'; settings.paused = false; return ok(); },
       pause: () => { state = 'paused'; settings.paused = true; return ok(); },
       search: query => {
-        const items = records.filter(r => (!query.q || `${r.appName} ${r.windowTitle}`.toLowerCase().includes(query.q.toLowerCase())) && (!query.appId || r.appId === query.appId) && (query.from === undefined || r.startedAt >= query.from) && (query.to === undefined || r.startedAt < query.to));
+        const items = (settings.consent ? records : []).filter(r => (!query.q || `${r.appName} ${r.windowTitle}`.toLowerCase().includes(query.q.toLowerCase())) && (!query.appId || r.appId === query.appId) && (query.from === undefined || r.startedAt >= query.from) && (query.to === undefined || r.startedAt < query.to));
         const start = Number(query.cursor || 0), end = start + query.limit;
-        return ok({ items: items.slice(start, end), nextCursor: end < items.length ? String(end) : undefined });
+        return ok({ items: items.slice(start, end), total: items.length, nextCursor: end < items.length ? String(end) : undefined });
       },
       apps: () => ok([{ appId: 'chrome', appName: 'Chrome' }, { appId: 'notepad', appName: 'Notepad' }]),
       stats: () => ok(Array.from({ length: statCount }, (_, i) => ({ appId: `app-${i}`, appName: `Test App ${i}`, durationMs: 600000 }))),
@@ -32,7 +32,7 @@ test('keyboard-only search, page continuation, menu, Esc and plugin re-entry', a
   await installBridge(page); await page.goto('/');
   const search = page.getByRole('textbox', { name: '搜索应用或窗口标题' });
   await expect(search).toBeFocused();
-  await expect(page.locator('.sidebar')).toHaveCount(0);
+  await expect(page.getByRole('complementary', { name: '快捷功能栏' })).toBeVisible();
   for (let i = 0; i < 80; i++) await search.press('ArrowDown');
   await expect(page.locator('[aria-selected=true]')).toHaveAttribute('id', 'history-result-160');
   const selected = page.locator('#history-result-160');
@@ -44,8 +44,9 @@ test('keyboard-only search, page continuation, menu, Esc and plugin re-entry', a
   expect(await page.evaluate(() => window.__host.hidden)).toBe(0);
   await search.press('Escape'); expect(await page.evaluate(() => window.__host.hidden)).toBe(1);
   await page.getByRole('button', { name: '更多操作', exact: true }).focus();
-  await page.keyboard.press('Enter'); await expect(page.getByRole('menuitem', { name: '设置', exact: true })).toBeFocused();
-  await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter'); await expect(page.getByRole('menuitem', { name: '导出 JSON', exact: true })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: '统计', exact: true }).focus(); await page.keyboard.press('Enter');
   await expect(page.getByRole('region', { name: '应用统计' })).toBeVisible();
   await page.keyboard.press('Escape'); await expect(search).toBeFocused();
   await openSecondary(page, '设置');
@@ -73,8 +74,7 @@ test('secondary panels and long details need no scrolling in a small tool window
 });
 
 async function openSecondary(page, name) {
-  await page.getByRole('button', { name: '更多操作', exact: true }).click();
-  await page.getByRole('menuitem', { name, exact: true }).click();
+  await page.getByRole('button', { name, exact: true }).click();
 }
 test('first-run consent, autofocus, search, keyboard detail and delete confirmation', async ({ page }) => {
   await installBridge(page, { consent: false, count: 0 }); await page.goto('/');
@@ -101,8 +101,8 @@ test('search, navigation, virtualization, details, pause, settings and deletion'
   await page.getByRole('button', { name: '记录中', exact: true }).click();
   await expect(page.getByRole('button', { name: '已暂停', exact: true })).toBeVisible();
   await openSecondary(page, '设置');
-  await page.getByLabel('界面主题').selectOption('dark');
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.emulateMedia({ colorScheme: 'dark' });
+  await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(32, 32, 32)');
   await page.getByRole('button', { name: '本地数据', exact: true }).click();
   await page.getByRole('button', { name: '清空所有历史' }).click(); await page.getByRole('button', { name: '确认删除', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
@@ -113,7 +113,7 @@ test('responsive light/dark views remain within viewport', async ({ page }) => {
   await installBridge(page); await page.goto('/');
   await expect(page.locator('.event-row').first()).toBeVisible();
   await page.screenshot({ path: 'docs/screenshots/history-light-test-fixtures.png' });
-  await openSecondary(page, '设置'); await page.getByLabel('界面主题').selectOption('dark');
+  await openSecondary(page, '设置'); await page.emulateMedia({ colorScheme: 'dark' });
   await page.getByRole('button', { name: /返回历史/ }).click();
   await page.screenshot({ path: 'docs/screenshots/history-dark-test-fixtures.png' });
   await page.setViewportSize({ width: 600, height: 544 });

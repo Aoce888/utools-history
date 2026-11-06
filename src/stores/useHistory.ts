@@ -9,6 +9,7 @@ export function useHistory() {
   const records = ref<ActivityRecord[]>([]), apps = ref<AppSummary[]>([]), stats = ref<AppStats[]>([])
   const error = ref(''), loading = ref(false), busy = ref(false), ready = ref(false), nextCursor = ref<string>()
   const matchTotal = ref<number>()
+  const queryFailed = ref(false)
   const q = ref(''), preset = ref('all'), startDate = ref(''), endDate = ref(''), appId = ref('')
   const range = computed(() => dateRange(preset.value, startDate.value, endDate.value))
   let request = 0, alive = true
@@ -21,6 +22,7 @@ export function useHistory() {
   async function search(more = false) {
     const token = ++request
     loading.value = true
+    queryFailed.value = false
     try {
       const page = await unwrap(bridge?.search({ ...range.value, q: q.value.trim(), appId: appId.value || undefined, cursor: more ? nextCursor.value : undefined, limit: 80 }))
       if (token !== request || !alive) return
@@ -28,7 +30,7 @@ export function useHistory() {
       matchTotal.value = Number.isSafeInteger(page.total) && page.total! >= 0 ? page.total : undefined
       nextCursor.value = page.nextCursor
       error.value = ''
-    } catch (e) { if (token === request && alive) { error.value = (e as Error).message; if (!more) { records.value = []; nextCursor.value = undefined; matchTotal.value = undefined } } }
+    } catch (e) { if (token === request && alive) { queryFailed.value = true; error.value = (e as Error).message; if (!more) { records.value = []; nextCursor.value = undefined; matchTotal.value = undefined } } }
     finally { if (token === request && alive) loading.value = false }
   }
   async function refreshStatus() { status.value = await unwrap(bridge?.status()) }
@@ -60,7 +62,7 @@ export function useHistory() {
       const text = await unwrap(bridge?.exportRecords({ format, ...range.value }))
       const url = URL.createObjectURL(new Blob([text], { type: format === 'csv' ? 'text/csv;charset=utf-8' : 'application/json' }))
       const link = document.createElement('a'); link.href = url; link.download = `utools-history-${new Date().toISOString().slice(0, 10)}.${format}`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } catch (e) { error.value = (e as Error).message }
+    } catch (e) { queryFailed.value = true; error.value = (e as Error).message }
   }
-  return { settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, matchTotal, q, preset, startDate, endDate, appId, range, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose() { alive = false; request++ } }
+  return { settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, matchTotal, queryFailed, q, preset, startDate, endDate, appId, range, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose() { alive = false; request++ } }
 }

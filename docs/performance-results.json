@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-06T07:33:45.086Z",
+  "measuredAt": "2026-11-06T08:18:14.098Z",
   "environment": {
     "os": "Windows_NT 10.0.22631",
     "node": "v24.18.0",
@@ -7,30 +7,30 @@
   },
   "data": "100000 synthetic fixtures; never loaded by product UI",
   "count": 100000,
-  "insertMs": 1244.2077000000002,
-  "queryP95Ms": 44.129799999999705,
+  "insertMs": 1103.9307000000001,
+  "queryP95Ms": 63.514000000000124,
   "byQuery": {
     "99999": {
-      "p95Ms": 44.76749999999993
+      "p95Ms": 59.02480000000014
     },
     "needle": {
-      "p95Ms": 1.9824000000000979
+      "p95Ms": 25.43380000000002
     },
     "项目文档": {
-      "p95Ms": 0.949500000000171
+      "p95Ms": 21.58920000000012
     },
     "no-match": {
-      "p95Ms": 44.93080000000009
+      "p95Ms": 67.06600000000026
     },
     "Application 12": {
-      "p95Ms": 1.2049999999999272
+      "p95Ms": 26.788700000000063
     }
   },
-  "twoPagesMs": 1.299000000000433,
-  "statsMs": 85.5644000000002,
-  "snapshotFlushMs": 38.54409999999962,
+  "twoPagesMs": 3.1116000000001804,
+  "statsMs": 73.85789999999997,
+  "snapshotFlushMs": 38.62780000000021,
   "databaseBytes": 19058688,
-  "nodeRssBytes": 157769728,
+  "nodeRssBytes": 159948800,
   "searchTargetMs": 150,
   "searchTargetMet": true,
   "limitations": "Warmed local WASM queries, not uTools renderer/collector end-to-end latency or long-term overhead."
