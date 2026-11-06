@@ -7,7 +7,11 @@
     "typecheck": "vue-tsc --noEmit",
     "postinstall": "node scripts/prepare-vendor.cjs",
     "predev": "node scripts/prepare-vendor.cjs",
-    "prebuild": "node scripts/prepare-vendor.cjs"
+    "prebuild": "node scripts/prepare-vendor.cjs",
+    "postbuild": "node scripts/finalize-build.cjs",
+    "test:ui": "playwright test",
+    "test:windows": "node --test tests/windows.integration.cjs",
+    "benchmark": "node scripts/benchmark.cjs"
   },
   "dependencies": {
     "sql.js": "^1.15.2",
@@ -25,6 +29,6 @@
   "name": "utools-history",
   "private": true,
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.18.0"
   }
 }

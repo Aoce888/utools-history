@@ -1,5 +1,7 @@
 # Windows collector feasibility — M1
 
+> Historical M1 report. The rapid-iteration M2/M3 implementation now adds a separate continuous, consent-gated service for the lifetime of the plugin process, persistent SQLite and a real UI. M1's bounded prototype remains intact. See architecture.md and manual-verification.md for current behavior. Production background reliability is still unverified.
+
 ## Decision
 
 **Go for a bounded prototype; No-Go for production continuous recording.** The experiment uses a hidden, non-elevated PowerShell child process calling GetForegroundWindow, GetWindowThreadProcessId and GetWindowTextW. It runs only after explicit start, samples every second, and exits after 60 seconds. The UI exit hook and unload handler stop the child; even if the host crashes, the child is bounded by its own deadline. No startup tasks, services, execution-policy bypass or administrator privileges are installed.

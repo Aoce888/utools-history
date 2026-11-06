@@ -37,3 +37,14 @@ test('retention, invalid settings, corrupt files and future schemas fail safely'
   try { fs.writeFileSync(file, 'bad data'); await assert.rejects(openRepository({ SQL, file })); assert.equal(fs.readFileSync(file, 'utf8'), 'bad data'); }
   finally { fs.rmSync(dir, { recursive: true, force: true }); }
 });
+test('future schema is preserved and atomic write failure leaves the last snapshot readable', async () => {
+  const SQL = await init(); const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'history-atomic-')); const file = path.join(dir, 'db');
+  try {
+    const future = new SQL.Database(); future.run('PRAGMA user_version=999'); fs.writeFileSync(file, future.export()); future.close();
+    const original = fs.readFileSync(file); await assert.rejects(openRepository({ SQL, file }), /newer/); assert.deepEqual(fs.readFileSync(file), original);
+    fs.unlinkSync(file);
+    const io = { ...fs }; const repo = await openRepository({ SQL, file, io }); repo.insert(event(1000)); repo.flush();
+    repo.insert(event(2000)); io.renameSync = () => { throw Error('disk failure'); }; assert.throws(() => repo.flush(), /disk failure/);
+    const saved = await openRepository({ SQL, file }); assert.equal(saved.count(), 1); saved.close(); io.renameSync = fs.renameSync; repo.close();
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});

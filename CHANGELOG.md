@@ -5,6 +5,8 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Added
+- Automated UI coverage, real Windows collector/storage integration tests and 100k-record benchmark reports.
+- Production builds bundle SQLite WASM and remove development URLs; consolidated manual acceptance checklist and developer preview instructions.
 - Searchable virtualized timeline, date/app filters, keyboard navigation, activity details and application statistics.
 - First-run consent, recording controls, exclusions, retention preferences, confirmed deletion and JSON/CSV export.
 - System/light/dark themes and responsive Vue interface; browser UI tests use explicitly labeled test fixtures.

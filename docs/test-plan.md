@@ -1,22 +1,16 @@
-# M0 / M1 verification
+# 自动化测试计划
 
-## Reproduction
+## 可重复检查
 
-Use Node.js 22.12+ and npm. Run `npm ci`, `npm run check`, then `npm run dev -- --host 127.0.0.1`. Import the absolute path to `public/plugin.json` in uTools developer tools. Enter the plugin command, edit a heading and verify reload/HMR. For packaged verification import `dist/plugin.json` after building.
+使用 Node.js 22.18+，`npm ci` 后执行：
 
-`npm run check` runs unit tests, Vue/TypeScript checking, build and required-artifact validation. Build output must contain index.html, plugin.json, logo.png and preload.js. Browser preview verifies rendering only; host APIs require uTools.
+1. `npm run check`：adapter 协议、首次同意、暂停、排除、合并、锁屏/空闲/长间隔、故障状态、SQLite 重开、日期/搜索/分页/统计、保留期、删除、损坏/未来 schema、原子保存失败及 CSV 注入测试；同时执行 Vue TS 检查和构建。
+2. `npx playwright install chromium`，`npm run test:ui`：引导、键盘、搜索、确认删除、偏好、主题、窄窗口、10 万条 fixtures 的分页与 DOM 有界性。可用 `PW_CHANNEL=msedge` 运行已安装 Edge。
+3. Windows 交互桌面运行 `npm run test:windows`：生产 preload 加载本地 WASM，真实 Win32 → SQLite、暂停和重开。无交互前台时明确跳过，不将跳过记为通过。
+4. `npm run benchmark`：临时生成 10 万条 fixtures，测 5 类关键词、两页检索、统计、落盘与文件体积；结果写入 `docs/performance-results.json`。它不是宿主端到端性能。
 
-## Host acceptance matrix
+生产构建应包含 index.html、plugin.json、logo、preload、采集/service/storage 模块、WASM 及许可；manifest 不包含 development 地址。测试数据只存在于 `tests/` 或临时目录，不写进用户历史。界面截图明确标为 TEST FIXTURE。
 
-Record OS, uTools version, date, result and evidence for each run. Never infer success from a running uTools process.
+## 无法自动化的验收
 
-| Scenario | Expected | Status |
-| --- | --- | --- |
-| Load dev entry / reload / packaged entry | Page renders without host errors | Pending host verification |
-| Explicit start / pause / clear | No capture before start; stops on pause; clear removes in-memory samples | Automated controller tests + host pending |
-| Minimize / switch / browser / Office / Explorer | Real app, title, timestamp or explicit fallback | Manual matrix pending |
-| Close UI / restart uTools / kill plugin | Stop or accurately report lifecycle limitation | Pending |
-| Lock / sleep / wake | Never claim uninterrupted capture | Pending |
-| Windows 10 and Windows 11 | Repeat all host checks | Pending |
-
-M1 is a bounded feasibility experiment, not production history. Do not use its timestamps as active-duration statistics. No startup installation or administrator permission is required.
+统一见 [待人工验证清单](manual-verification.md)，不再按里程碑逐项等待确认。填写实际 Windows/uTools 版本和证据后才能宣布宿主验收通过。

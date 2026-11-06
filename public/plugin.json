@@ -8,7 +8,7 @@
     "features":  [
                      {
                          "code":  "history",
-                         "description":  "操作历史采集实验",
+                         "description":  "操作历史 · 本地活动记录",
                          "cmds":  [
                                       "操作历史",
                                       "utools-history"

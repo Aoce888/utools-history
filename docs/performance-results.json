@@ -1,0 +1,37 @@
+{
+  "measuredAt": "2026-11-06T07:33:45.086Z",
+  "environment": {
+    "os": "Windows_NT 10.0.22631",
+    "node": "v24.18.0",
+    "cpu": "AMD Ryzen 7 7840HS with Radeon 780M Graphics   "
+  },
+  "data": "100000 synthetic fixtures; never loaded by product UI",
+  "count": 100000,
+  "insertMs": 1244.2077000000002,
+  "queryP95Ms": 44.129799999999705,
+  "byQuery": {
+    "99999": {
+      "p95Ms": 44.76749999999993
+    },
+    "needle": {
+      "p95Ms": 1.9824000000000979
+    },
+    "项目文档": {
+      "p95Ms": 0.949500000000171
+    },
+    "no-match": {
+      "p95Ms": 44.93080000000009
+    },
+    "Application 12": {
+      "p95Ms": 1.2049999999999272
+    }
+  },
+  "twoPagesMs": 1.299000000000433,
+  "statsMs": 85.5644000000002,
+  "snapshotFlushMs": 38.54409999999962,
+  "databaseBytes": 19058688,
+  "nodeRssBytes": 157769728,
+  "searchTargetMs": 150,
+  "searchTargetMet": true,
+  "limitations": "Warmed local WASM queries, not uTools renderer/collector end-to-end latency or long-term overhead."
+}
