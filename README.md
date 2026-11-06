@@ -22,6 +22,8 @@
 ![浅色界面（测试数据）](docs/screenshots/history-light-test-fixtures.png)
 ![深色界面（测试数据）](docs/screenshots/history-dark-test-fixtures.png)
 
+首次使用现为紧凑隐私说明，无需滚动即可开始记录；启用后进入时间线并聚焦搜索。已覆盖 800×544、600×400、480×360 CSS 窗口和 DPR 1/1.25/1.5 浏览器模拟，不能替代 Windows/uTools 的真实显示缩放测试。见 [渲染修复记录](docs/rendering-review.md)。
+
 ## 安装与运行
 
 需要 Windows 10/11、uTools 开发者工具；开发使用 Node.js **22.18+**（本次验证为 24.18）与 npm。uTools 内置 Node/Electron 的实际兼容性仍需宿主验证，存储不依赖原生 SQLite ABI。

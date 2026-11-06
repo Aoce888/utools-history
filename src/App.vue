@@ -15,7 +15,7 @@ const searchInput = ref<HTMLInputElement>(), timeline = ref<InstanceType<typeof 
 const labels = { not_started: '尚未开始', recording: '记录中', paused: '已暂停', unavailable: '采集不可用' }
 let poll: ReturnType<typeof setInterval>, debounce: ReturnType<typeof setTimeout>, polling = false
 watch(() => settings.value.theme, theme => { document.documentElement.dataset.theme = theme }, { immediate: true })
-watch(() => settings.value.consent, async consent => { if (consent) { await nextTick(); searchInput.value?.focus() } })
+watch(() => settings.value.consent, async consent => { if (consent) { view.value = 'history'; await nextTick(); searchInput.value?.focus() } })
 watch([q, preset, startDate, endDate, appId], () => {
   clearTimeout(debounce)
   debounce = setTimeout(() => { timeline.value?.reset(); void search(); void refreshStats() }, 120)
@@ -50,7 +50,7 @@ onUnmounted(() => { clearInterval(poll); clearTimeout(debounce); document.remove
 <template>
   <div class="app-shell">
     <aside class="sidebar"><div class="brand-symbol"><AppIcon name="history" :size="25" /></div><nav aria-label="主导航"><button v-for="tab in [{ id: 'history', icon: 'history', label: '历史' }, { id: 'statistics', icon: 'chart', label: '统计' }, { id: 'settings', icon: 'settings', label: '设置' }]" :key="tab.id" :class="{ active: view === tab.id }" :aria-label="tab.label" :aria-current="view === tab.id ? 'page' : undefined" @click="view = tab.id"><AppIcon :name="tab.icon" /><span>{{ tab.label }}</span></button></nav><span class="sidebar-end"><AppIcon name="shield" :size="18" /></span></aside>
-    <main class="workspace"><header class="app-header"><div><span class="eyebrow">YOUR LOCAL MEMORY</span><h1>操作历史<span class="version-label">PREVIEW</span></h1><p>找回你在电脑上做过的事</p></div><button class="status-pill" :class="status.state" :disabled="busy || !ready || !settings.consent" @click="toggle"><span class="status-dot" />{{ labels[status.state] }}<AppIcon :name="status.state === 'recording' ? 'pause' : 'play'" :size="13" /></button></header>
+    <main class="workspace"><header class="app-header"><h1>操作历史</h1><button class="status-pill" :class="status.state" :title="status.message" :disabled="busy || !ready || !settings.consent" @click="toggle"><span class="status-dot" />{{ labels[status.state] }}<AppIcon :name="status.state === 'recording' ? 'pause' : 'play'" :size="13" /></button></header>
       <div v-if="error" class="error-banner" role="alert"><span>{{ error }}</span><button class="button subtle" @click="initialize">重试</button></div>
       <div v-if="notice" class="notice" role="status">{{ notice }}<button class="icon-button" aria-label="关闭通知" @click="notice = ''"><AppIcon name="close" :size="15" /></button></div>
       <div v-if="loading && !ready" class="empty-state" role="status">正在打开本地数据库…</div>

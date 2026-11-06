@@ -27,6 +27,7 @@ async function installBridge(page, { consent = true, count = 240 } = {}) {
 test('first-run consent, autofocus, search, keyboard detail and delete confirmation', async ({ page }) => {
   await installBridge(page, { consent: false, count: 0 }); await page.goto('/');
   await expect(page.getByRole('button', { name: '同意并开始记录' })).toBeVisible();
+  await page.getByRole('button', { name: '统计', exact: true }).click();
   await page.getByRole('button', { name: '同意并开始记录' }).click();
   await expect(page.getByRole('textbox', { name: '搜索应用或窗口标题' })).toBeVisible();
   await expect(page.getByText('这一页，还没有足迹')).toBeVisible();
@@ -86,3 +87,31 @@ test('100k fixture dataset paginates with bounded DOM, date and app filters', as
   await page.getByLabel('结束日期', { exact: true }).fill('2000-01-02');
   await expect(page.getByText('这一页，还没有足迹')).toBeVisible();
 });
+
+for (const scale of [1, 1.25, 1.5]) {
+  test(`compact onboarding and timeline fit at emulated DPR ${scale}`, async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 600, height: 400 }, deviceScaleFactor: scale });
+    const page = await context.newPage();
+    try {
+      await installBridge(page, { consent: false }); await page.goto('/');
+      await expect(page.locator('.onboarding')).toBeVisible();
+      for (const size of [{ width: 800, height: 544 }, { width: 600, height: 400 }, { width: 480, height: 360 }]) {
+        await page.setViewportSize(size);
+        const geometry = await page.locator('.onboarding').evaluate(element => {
+          const button = element.querySelector('button'); const rect = button.getBoundingClientRect();
+          return { scroll: element.scrollHeight > element.clientHeight + 1, buttonTop: rect.top, buttonBottom: rect.bottom, screenHeight: innerHeight, pageOverflow: document.documentElement.scrollHeight > innerHeight || document.documentElement.scrollWidth > innerWidth };
+        });
+        expect(geometry.scroll, `onboarding should not scroll at ${size.width}x${size.height}`).toBe(false);
+        expect(geometry.pageOverflow).toBe(false);
+        expect(geometry.buttonTop).toBeGreaterThan(0); expect(geometry.buttonBottom).toBeLessThanOrEqual(geometry.screenHeight);
+      }
+      await page.screenshot({ path: `docs/screenshots/onboarding-compact-dpr-${scale}-test.png` });
+      await page.getByRole('button', { name: /开始记录/ }).click();
+      const search = page.getByRole('textbox', { name: '搜索应用或窗口标题' });
+      await expect(search).toBeFocused(); await expect(page.getByRole('region', { name: '历史时间线' })).toBeVisible();
+      const region = await page.getByRole('region', { name: '历史时间线' }).boundingBox(); expect(region.height).toBeGreaterThanOrEqual(70);
+      await search.fill('文档 12'); await expect(page.locator('.event-copy b').first()).toContainText('文档 12');
+      expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight && document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    } finally { await context.close(); }
+  });
+}

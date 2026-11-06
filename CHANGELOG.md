@@ -5,6 +5,8 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Compact the first-run page to essential privacy details and a visible start action; return to history and focus search after consent, including when enabled from another tab.
+- Remove forced 400px minimum height and welcome-page scrolling, reduce header/sidebar spacing, and use standard system fonts/weights without negative title tracking, hover filters or backdrop blur. Add compact viewport/DPR regression coverage; real uTools DPI rendering remains pending.
 - Move the uTools development entry and Vite server together to dedicated loopback port 5197, avoiding the Guanshi project already using 5173. Keep strict-port behavior and verify manifest/server consistency automatically.
 - Handle uTools `onPluginOut(true)` explicitly: stop capture, save the last snapshot and release the writer lock once. Hiding to background keeps the production service alive; shutdown during initialization closes a late runtime instead of exposing it.
 
