@@ -136,7 +136,7 @@ onUnmounted(() => { clearTimeout(noticeTimer); window.matchMedia('(prefers-color
     <section v-if="view === 'history'" class="history-section" aria-label="操作历史">
       <OnboardingView v-if="ready && !settings.consent" :busy="busy" :retention-days="settings.retentionDays" @start="startRecording" @settings="openView('settings')" />
       <div class="loading-line" :class="{ visible: loading }" role="status" :aria-label="loading ? '正在检索' : '检索完成'" />
-      <HistoryTimeline ref="timeline" :records="records" :query="q" :loading="loading" :more="!!nextCursor" :enabled="settings.consent" :filtered="hasFilters" :failed="queryFailed" @reopen="reopenApp" @detail="detail = $event" @more="search(true)" @clear="resetFilters(); focusSearch()" />
+      <HistoryTimeline :frequent="frequent" ref="timeline" :records="records" :query="q" :loading="loading" :more="!!nextCursor" :enabled="settings.consent" :filtered="hasFilters" :failed="queryFailed" @reopen="reopenApp" @detail="detail = $event" @more="search(true)" @clear="resetFilters(); focusSearch()" />
     </section>
     <StatisticsView v-else-if="view === 'statistics'" :stats="stats" />
     <SettingsView v-else :settings="settings" :busy="busy" :directory="status.directory" @save="updateSettings" @remove="confirmation = $event" @export="exportData" />
