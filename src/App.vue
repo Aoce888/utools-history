@@ -42,6 +42,7 @@ function outsideMenu(event: MouseEvent) { if (!(event.target as HTMLElement).clo
 async function startRecording() { await updateSettings({ consent: true, paused: false }); if (!error.value) returnToHistory() }
 async function exportFormat(format: 'json' | 'csv') { menuOpen.value = false; await exportData(format); focusSearch() }
 
+watch(() => settings.value.theme, theme => { document.documentElement.dataset.theme = theme || 'system' }, { immediate: true })
 watch(() => settings.value.consent, consent => { if (consent) returnToHistory() })
 watch(detail, () => { detailPage.value = 0 })
 watch([q, preset, startDate, endDate, appId], () => {
