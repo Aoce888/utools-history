@@ -31,7 +31,8 @@ function move(delta: number) {
     else if (top + rowHeight > viewport.value.scrollTop + height.value) viewport.value.scrollTop = top + rowHeight - height.value
   }
 }
-function openSelected() { const item = props.records[selected.value]; if (item && !props.loading) { if (props.frequent) emit('reopen', item); else emit('detail', item) } }
+function openSelected() { const item = props.records[selected.value]; if (item && !props.loading) emit('reopen', item) }
+function viewDetails(index: number) { selected.value = index; const item = props.records[index]; if (item && !props.loading) emit('detail', item) }
 function enterResult(event: KeyboardEvent) {
   if (event.isComposing) return
   if (event.target === viewport.value || (event.target as HTMLElement).closest('.event-row')) {
@@ -47,8 +48,7 @@ defineExpose({ move, openSelected, reset, selectedId })
       <div v-for="(item, i) in visible" :key="item.id" :id="`history-result-${item.id}`" role="option" :aria-selected="selected === start + i" :tabindex="selected === start + i ? 0 : -1" class="event-row" :class="{ selected: selected === start + i }" :style="{ top: `${(start + i) * rowHeight}px`, height: `${rowHeight}px` }" @click="selected = start + i; openSelected()" :aria-label="`${item.appName} ${item.windowTitle} 查看详情`">
         <ApplicationBadge :id="item.id" :name="item.appName" @reopen="emit('reopen', item)" />
         <div v-if="frequent" class="event-copy"><b>{{ item.appName }}</b><span>常用软件 · 点击或 Enter 再次打开</span></div><div v-else class="event-copy"><b><HighlightedText :text="item.windowTitle || '无可读取标题'" :query="query" /></b><span><HighlightedText :text="item.appName" :query="query" /></span></div>
-        <button v-if="!frequent" class="reopen-button" :aria-label="`查看 ${item.appName} 的记录详情`" @click.stop="selected = start + i; openSelected()">查看</button>
-        <ApplicationBadge :id="item.id" :name="item.appName" action-only @reopen="emit('reopen', item)" />
+        <button v-if="!frequent" class="reopen-button" :aria-label="`查看 ${item.appName} 的记录详情`" @keydown.enter.stop.prevent="viewDetails(start + i)" @click.stop="viewDetails(start + i)">查看</button>
         <div v-if="!frequent" class="event-time"><b>{{ timeLabel(item.startedAt) }}</b><span>{{ dayLabel(item.startedAt) }}</span></div>
       </div>
     </div>
