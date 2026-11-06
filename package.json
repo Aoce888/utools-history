@@ -2,14 +2,19 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "node --test",
+    "test": "node --test tests/*.test.cjs",
     "check": "npm test && npm run typecheck && npm run build && node scripts/check-artifacts.cjs",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "postinstall": "node scripts/prepare-vendor.cjs",
+    "predev": "node scripts/prepare-vendor.cjs",
+    "prebuild": "node scripts/prepare-vendor.cjs"
   },
   "dependencies": {
+    "sql.js": "^1.15.2",
     "vue": "^3.5.43"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "@types/node": "^26.6.6",
     "@vitejs/plugin-vue": "^6.0.9",
     "typescript": "^6.0.3",
