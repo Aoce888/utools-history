@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Show successful action feedback as a floating toast that disappears after three seconds instead of a persistent inline banner.
 - Place explicit “查看” and “再次打开” actions before each record's time.
 - Use “再次打开” for the history action, retaining the tooltip explaining that it launches the application without restoring the original document or page.
 - Replace the ambiguous reopen arrow with an explicit “打开应用” text button.

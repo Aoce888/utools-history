@@ -31,6 +31,11 @@ const detailPages = computed(() => Math.max(1, Math.ceil((detail.value?.windowTi
 const detailText = computed(() => detail.value?.windowTitle.slice(detailPage.value * 60, (detailPage.value + 1) * 60) || '无可读取标题')
 const labels = { not_started: '未启用', recording: '记录中', paused: '已暂停', unavailable: '不可用' }
 let poll: ReturnType<typeof setInterval>, debounce: ReturnType<typeof setTimeout>, polling = false
+let noticeTimer: ReturnType<typeof setTimeout>
+watch(notice, value => {
+  clearTimeout(noticeTimer)
+  if (value) noticeTimer = setTimeout(() => { notice.value = '' }, 3000)
+})
 
 function focusSearch() { nextTick(() => searchInput.value?.focus()) }
 function returnToHistory() { view.value = 'history'; shortcut.value = 'history'; menuOpen.value = false; focusSearch() }
@@ -91,7 +96,7 @@ onMounted(async () => {
     finally { polling = false }
   }, 3000)
 })
-onUnmounted(() => { window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', syncHostTheme); clearInterval(poll); clearTimeout(debounce); document.removeEventListener('keydown', keyboard); document.removeEventListener('click', outsideMenu); dispose() })
+onUnmounted(() => { clearTimeout(noticeTimer); window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', syncHostTheme); clearInterval(poll); clearTimeout(debounce); document.removeEventListener('keydown', keyboard); document.removeEventListener('click', outsideMenu); dispose() })
 </script>
 
 <template>
