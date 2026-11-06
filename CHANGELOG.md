@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Place the recording toggle above History in the shortcut rail and highlight its active recording icon in green, with a neutral paused icon.
 - Remove redundant workspace title rows so history starts directly with search and settings starts with its functional tabs.
 - Remove the same redundant back/status/export toolbar from settings; history and recording remain accessible through the fixed shortcut rail.
 - Simplify statistics to its date filter and results, removing the redundant title, back hint, recording status and export menu from that workspace.
