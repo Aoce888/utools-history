@@ -5,6 +5,9 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Added
+- Searchable virtualized timeline, date/app filters, keyboard navigation, activity details and application statistics.
+- First-run consent, recording controls, exclusions, retention preferences, confirmed deletion and JSON/CSV export.
+- System/light/dark themes and responsive Vue interface; browser UI tests use explicitly labeled test fixtures.
 - SQLite/WASM repository with atomic local snapshots, schema versioning, keyset pagination and retention cleanup.
 - Decoupled recording service with explicit consent, automatic sampling, merge/split rules, idle/secure-desktop handling, exclusions, heartbeat failure detection and CSV-safe export.
 - M0 TypeScript checking, reproducible host test plan and build-artifact verification.

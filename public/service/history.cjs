@@ -38,7 +38,10 @@ function createHistoryService({ repository: repo, collector, now = Date.now }) {
     try { collector.start(accept, fail); } catch (error) { fail(error); }
     revision++;
   }
-  function pause() { collector.stop(); boundary(); repo.updateSettings({ paused: true }); repo.flush(); state = 'paused'; message = '已暂停，不再写入活动'; revision++; }
+  function pause() {
+    collector.stop(); boundary(); state = 'paused'; message = '已暂停，不再写入活动'; revision++;
+    try { repo.updateSettings({ paused: true }); repo.flush(); } catch (error) { fail(error); throw error; }
+  }
   const api = {
     start, pause,
     initialize() { repo.prune(now()); const s = repo.getSettings(); if (s.consent && !s.paused) start(); else state = s.consent ? 'paused' : 'not_started'; },
@@ -53,8 +56,10 @@ function createHistoryService({ repository: repo, collector, now = Date.now }) {
     status() { return { state, message, revision, count: repo.count(), storageMode: 'local-sqlite' }; },
     getSettings: () => repo.getSettings(),
     updateSettings(patch) {
+      require('../storage/repository.cjs').validateSettings(patch);
       const wasRecording = state === 'recording'; boundary();
-      const settings = repo.updateSettings(patch); repo.prune(now());
+      let settings;
+      try { settings = repo.updateSettings(patch); repo.prune(now()); } catch (error) { fail(error); throw error; }
       if (!settings.consent) { collector.stop(); state = 'not_started'; }
       else if (settings.paused) { collector.stop(); state = 'paused'; }
       else if (!wasRecording) start();

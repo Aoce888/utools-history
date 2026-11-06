@@ -44,3 +44,9 @@ test('persistence errors stop collection instead of silently losing data', async
   const f = await fixture(); f.service.updateSettings({ consent: true });
   f.repo.insert = () => { throw Error('disk'); }; f.sample(); assert.equal(f.service.status().state, 'unavailable'); assert.ok(f.stopped() > 0); f.service.close();
 });
+test('invalid preferences do not interrupt capture; failed preference persistence does', async () => {
+  const f = await fixture(); f.service.updateSettings({ consent: true });
+  assert.throws(() => f.service.updateSettings({ retentionDays: 0 })); assert.equal(f.service.status().state, 'recording');
+  f.repo.updateSettings = () => { throw Error('disk full'); };
+  assert.throws(() => f.service.updateSettings({ retentionDays: 7 })); assert.equal(f.service.status().state, 'unavailable'); f.service.close();
+});
