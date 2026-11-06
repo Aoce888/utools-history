@@ -14,6 +14,10 @@ const history = useHistory()
 const { settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, matchTotal, queryFailed, q, preset, startDate, endDate, appId, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose } = history
 const view = ref('history'), menuOpen = ref(false), detail = ref<ActivityRecord>(), confirmation = ref<DeleteQuery>(), notice = ref('')
 const shortcut = ref('history')
+const hostDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
+const isDark = computed(() => settings.value.theme === 'dark' || (settings.value.theme !== 'light' && hostDark.value))
+function syncHostTheme(event: MediaQueryListEvent) { hostDark.value = event.matches }
+function toggleAppearance() { void updateSettings({ theme: isDark.value ? 'light' : 'dark' }) }
 const hasFilters = computed(() => !!q.value.trim() || preset.value !== 'all' || !!appId.value)
 const resultLabel = computed(() => loading.value ? '检索中…' : queryFailed.value ? '读取失败' : matchTotal.value === undefined ? `已加载 ${records.value.length}${nextCursor.value ? '+' : ''} 条` : `${matchTotal.value} 条${hasFilters.value ? '匹配' : '记录'}`)
 const searchInput = ref<HTMLInputElement>(), menu = ref<HTMLElement>(), timeline = ref<InstanceType<typeof HistoryTimeline>>()
@@ -70,6 +74,7 @@ async function confirmDeletion() { if (!confirmation.value) return; await remove
 async function copyTitle() { try { await navigator.clipboard.writeText(detail.value?.windowTitle || ''); notice.value = '标题已复制' } catch { error.value = '复制失败，请手动复制标题' } }
 async function excludeApp() { if (!detail.value) return; await updateSettings({ excludedApps: [...settings.value.excludedApps, detail.value.appId] }); if (!error.value) { detail.value = undefined; notice.value = '已排除此应用；已有记录需单独删除' } }
 onMounted(async () => {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncHostTheme)
   document.addEventListener('keydown', keyboard); document.addEventListener('click', outsideMenu)
   focusSearch(); await initialize(); focusSearch()
   window.utools?.onPluginEnter(() => { detail.value = undefined; confirmation.value = undefined; showAllHistory(); void refreshStatus().then(() => { void search() }).catch(() => {}) })
@@ -81,14 +86,14 @@ onMounted(async () => {
     finally { polling = false }
   }, 3000)
 })
-onUnmounted(() => { clearInterval(poll); clearTimeout(debounce); document.removeEventListener('keydown', keyboard); document.removeEventListener('click', outsideMenu); dispose() })
+onUnmounted(() => { window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', syncHostTheme); clearInterval(poll); clearTimeout(debounce); document.removeEventListener('keydown', keyboard); document.removeEventListener('click', outsideMenu); dispose() })
 </script>
 
 <template>
   <div class="app-shell">
     <aside class="shortcut-sidebar" aria-label="快捷功能栏">
       <nav class="shortcut-top" aria-label="主要功能"><button class="shortcut-button" :aria-current="shortcut === 'history' ? 'page' : undefined" title="历史：查看全部记录" aria-label="历史" @click="showAllHistory"><AppIcon name="history" /><span>历史</span></button><button class="shortcut-button" :aria-current="shortcut === 'search' ? 'page' : undefined" title="搜索：聚焦搜索框（Ctrl+K）" aria-label="搜索" @click="activateSearch"><AppIcon name="search" /><span>搜索</span></button><button class="shortcut-button" :aria-current="shortcut === 'statistics' ? 'page' : undefined" title="统计：查看应用活动时长" aria-label="统计" :disabled="!ready" @click="openView('statistics')"><AppIcon name="chart" /><span>统计</span></button></nav>
-      <nav class="shortcut-bottom" aria-label="记录与设置"><button class="shortcut-button" :aria-current="shortcut === 'settings' ? 'page' : undefined" title="设置：记录偏好、排除与数据管理" aria-label="设置" :disabled="!ready" @click="openView('settings')"><AppIcon name="settings" /><span>设置</span></button></nav>
+      <nav class="shortcut-bottom" aria-label="记录与设置"><button class="shortcut-button" :title="isDark ? '切换到日间模式' : '切换到夜间模式'" :aria-label="isDark ? '切换到日间模式' : '切换到夜间模式'" :disabled="!ready || busy" @click="toggleAppearance"><AppIcon :name="isDark ? 'moon' : 'sun'" /><span>{{ isDark ? '夜间' : '日间' }}</span></button><button class="shortcut-button" :aria-current="shortcut === 'settings' ? 'page' : undefined" title="设置：记录偏好、排除与数据管理" aria-label="设置" :disabled="!ready" @click="openView('settings')"><AppIcon name="settings" /><span>设置</span></button></nav>
     </aside>
     <main class="workspace">
     <header v-if="view === 'history'" class="tool-header">
