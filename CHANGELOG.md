@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Use “再次打开” for the history action, retaining the tooltip explaining that it launches the application without restoring the original document or page.
 - Replace the ambiguous reopen arrow with an explicit “打开应用” text button.
 - Place the reopen-application shortcut immediately after each record's time instead of beside its app icon.
 - Move appearance switching from the settings dropdown to a one-click sun/moon shortcut immediately above Settings in the sidebar.
