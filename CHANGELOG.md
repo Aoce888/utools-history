@@ -9,6 +9,7 @@ No official versions have been released.
 - Make Frequent an application launcher: display app icons/names without long window titles, and open the application on click or Enter. Full record details remain in History.
 
 ### Fixed
+- Deduplicate frequent software across case and .exe suffix variants, combining frequency before ranking.
 - Show successful action feedback as a floating toast that disappears after three seconds instead of a persistent inline banner.
 - Place explicit “查看” and “再次打开” actions before each record's time.
 - Use “再次打开” for the history action, retaining the tooltip explaining that it launches the application without restoring the original document or page.

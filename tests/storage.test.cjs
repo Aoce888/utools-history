@@ -6,6 +6,19 @@ const path = require('node:path');
 const init = require('sql.js');
 const { openRepository } = require('../public/storage/repository.cjs');
 const event = (start, title = '中文 hello') => ({ appId: 'notepad', appName: 'Notepad', processName: 'notepad', windowTitle: title, startedAt: start, endedAt: start + 100 });
+test('frequent apps merge case and executable suffix variants within the requested range', async () => {
+  const repo = await openRepository({ SQL: await init() });
+  try {
+    repo.insert({ ...event(1000), appId: 'Code' });
+    repo.insert({ ...event(2000), appId: 'code.exe' });
+    repo.insert({ ...event(3000), appId: 'CODE' });
+    repo.insert(event(4000));
+    const all = repo.search({ frequent: true });
+    assert.equal(all.items.length, 2); assert.equal(all.items[0].appId, 'CODE');
+    const scoped = repo.search({ frequent: true, from: 1500, to: 3500 });
+    assert.equal(scoped.items.length, 1); assert.equal(scoped.total, 1);
+  } finally { repo.close(); }
+});
 test('SQLite survives reopening, preserves settings and supports literal search and keyset pagination', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'history-db-')); const file = path.join(dir, 'history.sqlite');
   const SQL = await init();
