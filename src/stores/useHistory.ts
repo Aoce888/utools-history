@@ -9,7 +9,7 @@ export function useHistory() {
   const records = ref<ActivityRecord[]>([]), apps = ref<AppSummary[]>([]), stats = ref<AppStats[]>([])
   const error = ref(''), loading = ref(false), busy = ref(false), ready = ref(false), nextCursor = ref<string>()
   const matchTotal = ref<number>()
-  const queryFailed = ref(false)
+  const queryFailed = ref(false), frequent = ref(false)
   const q = ref(''), preset = ref('all'), startDate = ref(''), endDate = ref(''), appId = ref('')
   const range = computed(() => dateRange(preset.value, startDate.value, endDate.value))
   let request = 0, alive = true
@@ -24,7 +24,7 @@ export function useHistory() {
     loading.value = true
     queryFailed.value = false
     try {
-      const page = await unwrap(bridge?.search({ ...range.value, q: q.value.trim(), appId: appId.value || undefined, cursor: more ? nextCursor.value : undefined, limit: 80 }))
+      const page = await unwrap(bridge?.search({ ...range.value, frequent: frequent.value, q: q.value.trim(), appId: appId.value || undefined, cursor: more ? nextCursor.value : undefined, limit: 80 }))
       if (token !== request || !alive) return
       records.value = more ? [...records.value, ...page.items] : page.items
       matchTotal.value = Number.isSafeInteger(page.total) && page.total! >= 0 ? page.total : undefined
@@ -64,5 +64,5 @@ export function useHistory() {
       const link = document.createElement('a'); link.href = url; link.download = `utools-history-${new Date().toISOString().slice(0, 10)}.${format}`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (e) { queryFailed.value = true; error.value = (e as Error).message }
   }
-  return { settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, matchTotal, queryFailed, q, preset, startDate, endDate, appId, range, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose() { alive = false; request++ } }
+  return { frequent, settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, matchTotal, queryFailed, q, preset, startDate, endDate, appId, range, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose() { alive = false; request++ } }
 }

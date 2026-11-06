@@ -24,7 +24,7 @@ export interface Settings {
   consent: boolean; paused: boolean; retentionDays: number; idleSeconds: number;
   excludedApps: string[]; theme?: 'system' | 'light' | 'dark';
 }
-export interface SearchQuery { q?: string; from?: number; to?: number; appId?: string; limit?: number; cursor?: string }
+export interface SearchQuery { frequent?: boolean; q?: string; from?: number; to?: number; appId?: string; limit?: number; cursor?: string }
 export interface SearchPage { items: ActivityRecord[]; total?: number; nextCursor?: string }
 export interface AppSummary { appId: string; appName: string }
 export interface AppStats extends AppSummary { durationMs: number }

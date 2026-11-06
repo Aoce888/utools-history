@@ -11,7 +11,7 @@ import SettingsView from './views/SettingsView.vue'
 import StatisticsView from './views/StatisticsView.vue'
 
 const history = useHistory()
-const { settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, matchTotal, queryFailed, q, preset, startDate, endDate, appId, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose } = history
+const { frequent, settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, matchTotal, queryFailed, q, preset, startDate, endDate, appId, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose } = history
 const view = ref('history'), menuOpen = ref(false), detail = ref<ActivityRecord>(), confirmation = ref<DeleteQuery>(), notice = ref('')
 const shortcut = ref('history')
 const hostDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
@@ -47,10 +47,11 @@ watch(notice, value => {
 })
 
 function focusSearch() { nextTick(() => searchInput.value?.focus()) }
-function returnToHistory() { view.value = 'history'; shortcut.value = 'history'; menuOpen.value = false; focusSearch() }
+function returnToHistory() { frequent.value = false; view.value = 'history'; shortcut.value = 'history'; menuOpen.value = false; focusSearch() }
 function resetFilters() { q.value = ''; preset.value = 'all'; appId.value = ''; startDate.value = ''; endDate.value = ''; timeline.value?.reset() }
 function showAllHistory() { resetFilters(); returnToHistory() }
 function activateSearch() { returnToHistory(); shortcut.value = 'search' }
+function showFrequent() { resetFilters(); view.value = 'history'; shortcut.value = 'frequent'; frequent.value = true; void search() }
 function openView(value: string) { menuOpen.value = false; view.value = value; shortcut.value = value }
 function toggleMenu() { menuOpen.value = !menuOpen.value; if (menuOpen.value) nextTick(() => menu.value?.querySelector<HTMLButtonElement>('button')?.focus()) }
 function menuKeyboard(event: KeyboardEvent) {
@@ -71,7 +72,7 @@ watch(detail, () => { detailPage.value = 0 })
 watch([q, preset, startDate, endDate, appId], () => {
   clearTimeout(debounce)
   if (ready.value) loading.value = true
-  debounce = setTimeout(() => { timeline.value?.reset(); if (ready.value) { void search(); if (view.value === 'statistics') void refreshStats() } }, 120)
+  debounce = setTimeout(() => { timeline.value?.reset(); if (ready.value) { if (shortcut.value === 'frequent' && hasFilters.value) { frequent.value = false; shortcut.value = 'history' }; void search(); if (view.value === 'statistics') void refreshStats() } }, 120)
 })
 watch(view, async value => { if (value === 'statistics') await refreshStats(); if (value === 'history') focusSearch() })
 function keyboard(event: KeyboardEvent) {
@@ -111,7 +112,7 @@ onUnmounted(() => { clearTimeout(noticeTimer); window.matchMedia('(prefers-color
 <template>
   <div class="app-shell">
     <aside class="shortcut-sidebar" aria-label="快捷功能栏">
-      <nav class="shortcut-top" aria-label="主要功能"><button class="shortcut-button" :aria-current="shortcut === 'history' ? 'page' : undefined" title="历史：查看全部记录" aria-label="历史" @click="showAllHistory"><AppIcon name="history" /><span>历史</span></button><button class="shortcut-button" :aria-current="shortcut === 'search' ? 'page' : undefined" title="搜索：聚焦搜索框（Ctrl+K）" aria-label="搜索" @click="activateSearch"><AppIcon name="search" /><span>搜索</span></button><button class="shortcut-button" :aria-current="shortcut === 'statistics' ? 'page' : undefined" title="统计：查看应用活动时长" aria-label="统计" :disabled="!ready" @click="openView('statistics')"><AppIcon name="chart" /><span>统计</span></button></nav>
+      <nav class="shortcut-top" aria-label="主要功能"><button class="shortcut-button" :aria-current="shortcut === 'history' ? 'page' : undefined" title="历史：查看全部记录" aria-label="历史" @click="showAllHistory"><AppIcon name="history" /><span>历史</span></button><button class="shortcut-button" :aria-current="shortcut === 'frequent' ? 'page' : undefined" title="常用：按应用记录次数排序" aria-label="常用" @click="showFrequent"><AppIcon name="window" /><span>常用</span></button><button class="shortcut-button" :aria-current="shortcut === 'statistics' ? 'page' : undefined" title="统计：查看应用活动时长" aria-label="统计" :disabled="!ready" @click="openView('statistics')"><AppIcon name="chart" /><span>统计</span></button></nav>
       <nav class="shortcut-bottom" aria-label="记录与设置"><button class="shortcut-button" :title="isDark ? '切换到日间模式' : '切换到夜间模式'" :aria-label="isDark ? '切换到日间模式' : '切换到夜间模式'" :disabled="!ready || busy" @click="toggleAppearance"><AppIcon :name="isDark ? 'moon' : 'sun'" /><span>{{ isDark ? '夜间' : '日间' }}</span></button><button class="shortcut-button" :aria-current="shortcut === 'settings' ? 'page' : undefined" title="设置：记录偏好、排除与数据管理" aria-label="设置" :disabled="!ready" @click="openView('settings')"><AppIcon name="settings" /><span>设置</span></button></nav>
     </aside>
     <main class="workspace">

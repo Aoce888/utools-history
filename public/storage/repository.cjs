@@ -91,6 +91,10 @@ async function openRepository({ file, SQL, io = fs }) {
     setEnd(id, endedAt) { db.run('UPDATE activity_events SET ended_at = MAX(started_at, ?) WHERE id = ?', [endedAt, id]); dirty = true; },
     search(params = {}) {
       const { conditions, values } = filters(params);
+      if (params.frequent) {
+        const result = rows(db, 'SELECT e.* FROM activity_events e JOIN (SELECT app_id, MAX(id) AS latest_id, COUNT(*) AS uses FROM activity_events GROUP BY app_id) a ON e.id=a.latest_id ORDER BY a.uses DESC,e.started_at DESC LIMIT 80');
+        return { items: result.map(record), total: result.length };
+      }
       const limit = params.limit ?? 80;
       if (!Number.isInteger(limit) || limit < 1 || limit > 200) throw Error('Invalid page size');
       const total = rows(db, `SELECT COUNT(*) AS count FROM activity_events ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''}`, values)[0].count;
