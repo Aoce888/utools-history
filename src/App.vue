@@ -91,8 +91,6 @@ onUnmounted(() => { clearInterval(poll); clearTimeout(debounce); document.remove
     </aside>
     <main class="workspace">
     <header class="workspace-heading"><h1>{{ view === 'history' ? '操作历史' : view === 'statistics' ? '应用统计' : '设置' }}</h1>
-      <button class="status-pill" :class="status.state" :title="`${status.message || '仅在插件进程存活期间记录'}；点击暂停或继续`" :disabled="busy || !ready || !settings.consent" @click="toggle"><span class="status-dot" />{{ labels[status.state] }}</button>
-      <div class="more-controls"><button class="icon-button more-trigger" aria-label="更多操作" title="导出当前日期范围" aria-haspopup="menu" :aria-expanded="menuOpen" @click="toggleMenu">•••</button><div v-if="menuOpen" ref="menu" class="tool-menu" role="menu" aria-label="更多操作" @keydown="menuKeyboard"><button role="menuitem" :disabled="!ready || !settings.consent" @click="exportFormat('json')"><AppIcon name="download" :size="16" />导出 JSON</button><button role="menuitem" :disabled="!ready || !settings.consent" @click="exportFormat('csv')"><AppIcon name="download" :size="16" />导出 CSV</button></div></div>
     </header>
     <header v-if="view === 'history'" class="tool-header">
       <div class="search-box"><AppIcon name="search" :size="19" /><input ref="searchInput" v-model="q" aria-label="搜索应用或窗口标题" placeholder="搜索应用、窗口标题…" maxlength="500" :aria-activedescendant="timeline?.selectedId" aria-controls="history-results" @focus="view !== 'history' && returnToHistory()" /><button v-if="q" class="icon-button" aria-label="清除搜索" @click="q = ''; focusSearch()"><AppIcon name="close" :size="16" /></button></div>
@@ -102,6 +100,9 @@ onUnmounted(() => { clearInterval(poll); clearTimeout(debounce); document.remove
       <template v-if="view === 'history' || view === 'statistics'"><select v-model="preset" aria-label="日期筛选"><option value="all">全部日期</option><option value="today">今天</option><option value="yesterday">昨天</option><option value="week">近 7 天</option><option value="custom">自定义日期</option></select><select v-if="view === 'history'" v-model="appId" aria-label="应用筛选"><option value="">全部应用</option><option v-for="app in apps" :key="app.appId" :value="app.appId">{{ app.appName }}</option></select></template>
       <button v-if="view !== 'history'" class="back-button" @click="returnToHistory">← 返回历史 <kbd>Esc</kbd></button>
       <span v-if="view === 'history'" class="record-count" :title="`本地共 ${status.count} 条记录；此处显示当前筛选的匹配数`">{{ resultLabel }}</span>
+      <button class="status-pill" :class="status.state" :title="`${status.message || '仅在插件进程存活期间记录'}；点击暂停或继续`" :disabled="busy || !ready || !settings.consent" @click="toggle"><span class="status-dot" />{{ labels[status.state] }}</button>
+      <div class="more-controls"><button class="icon-button more-trigger" aria-label="更多操作" title="导出当前日期范围" aria-haspopup="menu" :aria-expanded="menuOpen" @click="toggleMenu">•••</button><div v-if="menuOpen" ref="menu" class="tool-menu" role="menu" aria-label="更多操作" @keydown="menuKeyboard"><button role="menuitem" :disabled="!ready || !settings.consent" @click="exportFormat('json')"><AppIcon name="download" :size="16" />导出 JSON</button><button role="menuitem" :disabled="!ready || !settings.consent" @click="exportFormat('csv')"><AppIcon name="download" :size="16" />导出 CSV</button></div></div>
+
     </div>
     <div v-if="preset === 'custom' && view !== 'settings'" class="date-range custom-range"><input type="date" aria-label="开始日期" v-model="startDate" /><span>至</span><input type="date" aria-label="结束日期" v-model="endDate" /></div>
     <div v-if="error" class="error-banner" role="alert"><span>{{ error }}</span><button class="button subtle" @click="initialize">重试</button></div>

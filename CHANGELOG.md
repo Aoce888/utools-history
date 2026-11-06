@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Move recording status and the export menu from the workspace title to the right of the history result count.
 - Remove legacy independent theme preferences from the bridge and database settings; migrate old theme keys away. Appearance is solely a CSS mapping of the host-recommended prefers-color-scheme state.
 - Restore a fixed 60px shortcut rail with history/search/statistics and bottom recording/settings controls; show query-specific counts and distinguish query failures from empty results.
 - Follow uTools' recommended prefers-color-scheme mechanism automatically with neutral light/dark surfaces; remove the independent theme selector and ignore legacy UI theme overrides.
