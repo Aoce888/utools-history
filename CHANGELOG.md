@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Move the recording toggle outside the search field on its right; show current recording/paused state rather than the next action, keeping the recording icon green.
 - Place the recording toggle above History in the shortcut rail and highlight its active recording icon in green, with a neutral paused icon.
 - Remove redundant workspace title rows so history starts directly with search and settings starts with its functional tabs.
 - Remove the same redundant back/status/export toolbar from settings; history and recording remain accessible through the fixed shortcut rail.

@@ -32,6 +32,8 @@ small, kbd { font-size: 11px; color: var(--muted); } kbd { font-family: inherit;
 .icon-button:hover, .button:hover { background: var(--hover); }
 .status-pill { display: flex; align-items: center; gap: 6px; padding: 6px 7px; font-size: 12px; white-space: nowrap; border-radius: 4px; }
 .status-pill:hover { background: var(--hover); }.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }.recording .status-dot { background: #24926d; }.unavailable .status-dot { background: #c66e37; }
+.status-pill.recording svg { color: #16845b; }
+@media (prefers-color-scheme: dark) { .status-pill.recording svg { color: #5dd49b; } }
 .more-controls { position: relative; flex-shrink: 0; }.more-trigger { width: 28px; height: 30px; letter-spacing: 1px; font-weight: 600; }
 .tool-menu { position: absolute; top: 34px; right: 0; z-index: 10; min-width: 155px; padding: 4px; border: 1px solid var(--line); background: var(--surface); border-radius: 5px; box-shadow: 0 4px 14px #0002; }
 .tool-menu button { display: flex; width: 100%; align-items: center; gap: 10px; padding: 8px 10px; text-align: left; border-radius: 3px; }.tool-menu button:hover, .tool-menu button:focus-visible { background: var(--selected); }
