@@ -84,6 +84,7 @@ async function openRepository({ file, SQL, io = fs }) {
       if (!Number.isSafeInteger(id) || !Number.isSafeInteger(endedAt)) throw Error('Invalid event');
       db.run('UPDATE activity_events SET ended_at = ? WHERE id = ? AND ended_at <= ?', [endedAt, id, endedAt]); dirty = true;
     },
+    setEnd(id, endedAt) { db.run('UPDATE activity_events SET ended_at = MAX(started_at, ?) WHERE id = ?', [endedAt, id]); dirty = true; },
     search(params = {}) {
       const { conditions, values } = filters(params);
       const limit = params.limit ?? 80;
