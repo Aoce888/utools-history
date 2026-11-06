@@ -90,8 +90,6 @@ onUnmounted(() => { clearInterval(poll); clearTimeout(debounce); document.remove
       <nav class="shortcut-bottom" aria-label="记录与设置"><button class="shortcut-button" :title="!settings.consent ? '请先确认隐私说明以启用记录' : status.state === 'recording' ? '暂停记录' : '继续记录'" :aria-label="status.state === 'recording' ? '暂停记录' : '继续记录'" :disabled="busy || !ready || !settings.consent" @click="toggle"><AppIcon :name="status.state === 'recording' ? 'pause' : 'play'" /><span>{{ status.state === 'recording' ? '暂停' : '继续' }}</span></button><button class="shortcut-button" :aria-current="shortcut === 'settings' ? 'page' : undefined" title="设置：记录偏好、排除与数据管理" aria-label="设置" :disabled="!ready" @click="openView('settings')"><AppIcon name="settings" /><span>设置</span></button></nav>
     </aside>
     <main class="workspace">
-    <header v-if="view !== 'statistics'" class="workspace-heading"><h1>{{ view === 'history' ? '操作历史' : '设置' }}</h1>
-    </header>
     <header v-if="view === 'history'" class="tool-header">
       <div class="search-box"><AppIcon name="search" :size="19" /><input ref="searchInput" v-model="q" aria-label="搜索应用或窗口标题" placeholder="搜索应用、窗口标题…" maxlength="500" :aria-activedescendant="timeline?.selectedId" aria-controls="history-results" @focus="view !== 'history' && returnToHistory()" /><button v-if="q" class="icon-button" aria-label="清除搜索" @click="q = ''; focusSearch()"><AppIcon name="close" :size="16" /></button></div>
     </header>
