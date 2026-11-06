@@ -33,6 +33,7 @@ No official versions have been released.
 - Handle uTools `onPluginOut(true)` explicitly: stop capture, save the last snapshot and release the writer lock once. Hiding to background keeps the production service alive; shutdown during initialization closes a late runtime instead of exposing it.
 
 ### Added
+- Add a per-application recording switch after choosing an app filter, backed by the existing persisted exclusion rules; changing it preserves global pause and existing history.
 - Capture accessible process executable paths after consent/exclusion checks, display native uTools application icons, and offer an explicit open-application shortcut for existing local executables. Old records without a path retain a fallback badge; this does not restore original documents or URLs.
 - Automated UI coverage, real Windows collector/storage integration tests and 100k-record benchmark reports.
 - Production builds bundle SQLite WASM and remove development URLs; consolidated manual acceptance checklist and developer preview instructions.

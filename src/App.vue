@@ -24,6 +24,15 @@ async function reopenApp(item: ActivityRecord) {
   else notice.value = `已请求打开 ${item.appName}（不恢复原文件或网页）`
 }
 const hasFilters = computed(() => !!q.value.trim() || preset.value !== 'all' || !!appId.value)
+const selectedAppExcluded = computed(() => settings.value.excludedApps.some(value => value.toLowerCase().replace(/\.exe$/, '') === appId.value.toLowerCase().replace(/\.exe$/, '')))
+async function toggleSelectedApp() {
+  if (!appId.value) return
+  const excludedApps = selectedAppExcluded.value
+    ? settings.value.excludedApps.filter(value => value.toLowerCase().replace(/\.exe$/, '') !== appId.value.toLowerCase().replace(/\.exe$/, ''))
+    : [...settings.value.excludedApps, appId.value]
+  await updateSettings({ excludedApps })
+  if (!error.value) notice.value = selectedAppExcluded.value ? '已关闭此软件的新记录，已有历史保留' : '已允许记录此软件；全局暂停状态保持不变'
+}
 const resultLabel = computed(() => loading.value ? '检索中…' : queryFailed.value ? '读取失败' : matchTotal.value === undefined ? `已加载 ${records.value.length}${nextCursor.value ? '+' : ''} 条` : `${matchTotal.value} 条${hasFilters.value ? '匹配' : '记录'}`)
 const searchInput = ref<HTMLInputElement>(), menu = ref<HTMLElement>(), timeline = ref<InstanceType<typeof HistoryTimeline>>()
 const detailPage = ref(0)
@@ -119,6 +128,7 @@ onUnmounted(() => { clearTimeout(noticeTimer); window.matchMedia('(prefers-color
 
     </div>
     <div v-if="preset === 'custom' && view !== 'settings'" class="date-range custom-range"><input type="date" aria-label="开始日期" v-model="startDate" /><span>至</span><input type="date" aria-label="结束日期" v-model="endDate" /></div>
+    <div v-if="view === 'history' && appId" class="app-recording-control"><span>{{ apps.find(app => app.appId === appId)?.appName || appId }}</span><button class="button" role="switch" :aria-checked="!selectedAppExcluded" :disabled="busy" @click="toggleSelectedApp">{{ selectedAppExcluded ? '记录已关闭' : '记录已开启' }}</button></div>
     <div v-if="error" class="error-banner" role="alert"><span>{{ error }}</span><button class="button subtle" @click="initialize">重试</button></div>
     <div v-if="notice" class="notice" role="status"><span>{{ notice }}</span><button class="icon-button" aria-label="关闭通知" @click="notice = ''"><AppIcon name="close" :size="14" /></button></div>
 
