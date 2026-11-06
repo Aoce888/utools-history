@@ -23,9 +23,18 @@ for (const method of ['status', 'start', 'pause', 'getSettings', 'updateSettings
     } catch (error) { return { ok: false, error: { code: 'HISTORY_ERROR', message: error.message || '本地服务不可用' } } }
   }
 }
-window.addEventListener('beforeunload', () => { shuttingDown = true; window.historySpike.stop(); runtime?.close() })
+function shutdown() {
+  if (shuttingDown) return
+  shuttingDown = true
+  window.historySpike.stop()
+  runtime?.close()
+}
+window.addEventListener('beforeunload', shutdown)
 if (window.utools) {
-  window.utools.onPluginOut(() => window.historySpike.stop())
+  window.utools.onPluginOut(isKill => {
+    if (isKill) shutdown()
+    else window.historySpike.stop()
+  })
   window.utools.onPluginReady(() => { ready().catch(() => {}) })
 }
 

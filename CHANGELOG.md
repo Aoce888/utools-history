@@ -4,6 +4,9 @@ No official versions have been released.
 
 ## [Unreleased]
 
+### Fixed
+- Handle uTools `onPluginOut(true)` explicitly: stop capture, save the last snapshot and release the writer lock once. Hiding to background keeps the production service alive; shutdown during initialization closes a late runtime instead of exposing it.
+
 ### Added
 - Automated UI coverage, real Windows collector/storage integration tests and 100k-record benchmark reports.
 - Production builds bundle SQLite WASM and remove development URLs; consolidated manual acceptance checklist and developer preview instructions.
