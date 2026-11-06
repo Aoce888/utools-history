@@ -5,6 +5,8 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Rework the UI as a compact desktop tool: always-visible search and recording controls, 56px result rows, one-line filters, and a secondary menu for settings/statistics/export. Replace the welcome page with inline consent and remove the sidebar and decorative headings.
+- Support keyboard-only page continuation, retain selection across live refresh, focus search on plugin re-entry, and make Esc close menus/details, return from secondary views, clear search, then hide the host window. Paginate secondary panels and long detail titles instead of adding page scrollbars.
 - Compact the first-run page to essential privacy details and a visible start action; return to history and focus search after consent, including when enabled from another tab.
 - Remove forced 400px minimum height and welcome-page scrolling, reduce header/sidebar spacing, and use standard system fonts/weights without negative title tracking, hover filters or backdrop blur. Add compact viewport/DPR regression coverage; real uTools DPI rendering remains pending.
 - Move the uTools development entry and Vite server together to dedicated loopback port 5197, avoiding the Guanshi project already using 5173. Keep strict-port behavior and verify manifest/server consistency automatically.

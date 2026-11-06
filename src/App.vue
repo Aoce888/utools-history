@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { ActivityRecord, DeleteQuery } from './domain/bridge'
 import { useHistory } from './stores/useHistory'
 import { duration, dayLabel, timeLabel } from './domain/format'
@@ -9,34 +9,63 @@ import ModalDialog from './components/ModalDialog.vue'
 import OnboardingView from './views/OnboardingView.vue'
 import SettingsView from './views/SettingsView.vue'
 import StatisticsView from './views/StatisticsView.vue'
-const { settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, q, preset, startDate, endDate, appId, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose } = useHistory()
-const view = ref('history'), detail = ref<ActivityRecord>(), confirmation = ref<DeleteQuery>(), notice = ref('')
-const searchInput = ref<HTMLInputElement>(), timeline = ref<InstanceType<typeof HistoryTimeline>>()
-const labels = { not_started: '尚未开始', recording: '记录中', paused: '已暂停', unavailable: '采集不可用' }
+
+const history = useHistory()
+const { settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, q, preset, startDate, endDate, appId, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose } = history
+const view = ref('history'), menuOpen = ref(false), detail = ref<ActivityRecord>(), confirmation = ref<DeleteQuery>(), notice = ref('')
+const searchInput = ref<HTMLInputElement>(), menu = ref<HTMLElement>(), timeline = ref<InstanceType<typeof HistoryTimeline>>()
+const detailPage = ref(0)
+const detailPages = computed(() => Math.max(1, Math.ceil((detail.value?.windowTitle.length || 0) / 60)))
+const detailText = computed(() => detail.value?.windowTitle.slice(detailPage.value * 60, (detailPage.value + 1) * 60) || '无可读取标题')
+const labels = { not_started: '未启用', recording: '记录中', paused: '已暂停', unavailable: '不可用' }
 let poll: ReturnType<typeof setInterval>, debounce: ReturnType<typeof setTimeout>, polling = false
+
+function focusSearch() { nextTick(() => searchInput.value?.focus()) }
+function returnToHistory() { view.value = 'history'; menuOpen.value = false; focusSearch() }
+function openView(value: string) { menuOpen.value = false; view.value = value }
+function toggleMenu() { menuOpen.value = !menuOpen.value; if (menuOpen.value) nextTick(() => menu.value?.querySelector<HTMLButtonElement>('button')?.focus()) }
+function menuKeyboard(event: KeyboardEvent) {
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+  event.preventDefault(); event.stopPropagation()
+  const buttons = [...(menu.value?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') || [])]
+  const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
+  const target = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (index + (event.key === 'ArrowUp' ? -1 : 1) + buttons.length) % buttons.length
+  buttons[target]?.focus()
+}
+function outsideMenu(event: MouseEvent) { if (!(event.target as HTMLElement).closest('.more-controls')) menuOpen.value = false }
+async function startRecording() { await updateSettings({ consent: true, paused: false }); if (!error.value) returnToHistory() }
+async function exportFormat(format: 'json' | 'csv') { menuOpen.value = false; await exportData(format); focusSearch() }
 watch(() => settings.value.theme, theme => { document.documentElement.dataset.theme = theme }, { immediate: true })
-watch(() => settings.value.consent, async consent => { if (consent) { view.value = 'history'; await nextTick(); searchInput.value?.focus() } })
+watch(() => settings.value.consent, consent => { if (consent) returnToHistory() })
+watch(detail, () => { detailPage.value = 0 })
 watch([q, preset, startDate, endDate, appId], () => {
   clearTimeout(debounce)
-  debounce = setTimeout(() => { timeline.value?.reset(); void search(); void refreshStats() }, 120)
+  if (ready.value) loading.value = true
+  debounce = setTimeout(() => { timeline.value?.reset(); if (ready.value) { void search(); if (view.value === 'statistics') void refreshStats() } }, 120)
 })
-watch(view, async value => { if (value === 'statistics') await refreshStats(); if (value === 'history') { await nextTick(); searchInput.value?.focus() } })
+watch(view, async value => { if (value === 'statistics') await refreshStats(); if (value === 'history') focusSearch() })
 function keyboard(event: KeyboardEvent) {
-  if (detail.value || confirmation.value) return
-  const target = event.target as HTMLElement
-  if (event.key === 'Escape') { if (view.value !== 'history') view.value = 'history'; else if (q.value) q.value = ''; searchInput.value?.focus(); return }
-  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); view.value = 'history'; nextTick(() => searchInput.value?.focus()); return }
-  if (view.value !== 'history' || ['TEXTAREA', 'SELECT'].includes(target.tagName) || (target.tagName === 'INPUT' && target !== searchInput.value)) return
+  if (event.isComposing || detail.value || confirmation.value) return
+  if (event.key === 'Escape') {
+    event.preventDefault(); event.stopPropagation()
+    if (menuOpen.value) { menuOpen.value = false; focusSearch() }
+    else if (view.value !== 'history') returnToHistory()
+    else if (q.value) { q.value = ''; focusSearch() }
+    else { window.utools?.hideMainWindow(); focusSearch() }
+    return
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); returnToHistory(); return }
+  if (menuOpen.value || view.value !== 'history' || event.target !== searchInput.value) return
   if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); timeline.value?.move(event.key === 'ArrowDown' ? 1 : -1) }
-  if (event.key === 'Enter' && target === searchInput.value) { event.preventDefault(); timeline.value?.openSelected() }
+  if (event.key === 'Enter') { event.preventDefault(); timeline.value?.openSelected() }
 }
 async function confirmDeletion() { if (!confirmation.value) return; await remove(confirmation.value); if (!error.value) { confirmation.value = undefined; detail.value = undefined; notice.value = '历史已删除' } }
-async function copyTitle() { try { await navigator.clipboard.writeText(detail.value?.windowTitle || ''); notice.value = '标题已复制' } catch { error.value = '复制失败，请手动选择标题复制' } }
-async function excludeApp() { if (!detail.value) return; await updateSettings({ excludedApps: [...settings.value.excludedApps, detail.value.appId] }); if (!error.value) { detail.value = undefined; notice.value = '已排除该应用；已有记录仍保留，可单独删除' } }
+async function copyTitle() { try { await navigator.clipboard.writeText(detail.value?.windowTitle || ''); notice.value = '标题已复制' } catch { error.value = '复制失败，请手动复制标题' } }
+async function excludeApp() { if (!detail.value) return; await updateSettings({ excludedApps: [...settings.value.excludedApps, detail.value.appId] }); if (!error.value) { detail.value = undefined; notice.value = '已排除此应用；已有记录需单独删除' } }
 onMounted(async () => {
-  document.addEventListener('keydown', keyboard)
-  await initialize(); await nextTick(); searchInput.value?.focus()
-  if (window.utools) window.utools.onPluginEnter(() => { nextTick(() => searchInput.value?.focus()); void refreshStatus().catch(() => {}) })
+  document.addEventListener('keydown', keyboard); document.addEventListener('click', outsideMenu)
+  focusSearch(); await initialize(); focusSearch()
+  window.utools?.onPluginEnter(() => { detail.value = undefined; confirmation.value = undefined; returnToHistory(); void refreshStatus().then(() => { if (settings.value.consent) void search() }).catch(() => {}) })
   poll = setInterval(async () => {
     if (polling || busy.value || !ready.value) return
     polling = true
@@ -45,25 +74,37 @@ onMounted(async () => {
     finally { polling = false }
   }, 3000)
 })
-onUnmounted(() => { clearInterval(poll); clearTimeout(debounce); document.removeEventListener('keydown', keyboard); dispose() })
+onUnmounted(() => { clearInterval(poll); clearTimeout(debounce); document.removeEventListener('keydown', keyboard); document.removeEventListener('click', outsideMenu); dispose() })
 </script>
+
 <template>
-  <div class="app-shell">
-    <aside class="sidebar"><div class="brand-symbol"><AppIcon name="history" :size="25" /></div><nav aria-label="主导航"><button v-for="tab in [{ id: 'history', icon: 'history', label: '历史' }, { id: 'statistics', icon: 'chart', label: '统计' }, { id: 'settings', icon: 'settings', label: '设置' }]" :key="tab.id" :class="{ active: view === tab.id }" :aria-label="tab.label" :aria-current="view === tab.id ? 'page' : undefined" @click="view = tab.id"><AppIcon :name="tab.icon" /><span>{{ tab.label }}</span></button></nav><span class="sidebar-end"><AppIcon name="shield" :size="18" /></span></aside>
-    <main class="workspace"><header class="app-header"><h1>操作历史</h1><button class="status-pill" :class="status.state" :title="status.message" :disabled="busy || !ready || !settings.consent" @click="toggle"><span class="status-dot" />{{ labels[status.state] }}<AppIcon :name="status.state === 'recording' ? 'pause' : 'play'" :size="13" /></button></header>
-      <div v-if="error" class="error-banner" role="alert"><span>{{ error }}</span><button class="button subtle" @click="initialize">重试</button></div>
-      <div v-if="notice" class="notice" role="status">{{ notice }}<button class="icon-button" aria-label="关闭通知" @click="notice = ''"><AppIcon name="close" :size="15" /></button></div>
-      <div v-if="loading && !ready" class="empty-state" role="status">正在打开本地数据库…</div>
-      <OnboardingView v-else-if="ready && !settings.consent && view !== 'settings'" :busy="busy" @start="updateSettings({ consent: true, paused: false })" @settings="view = 'settings'" />
-      <template v-else-if="ready">
-        <template v-if="view !== 'settings'"><div class="search-box" v-if="view === 'history'"><AppIcon name="search" /><input ref="searchInput" v-model="q" aria-label="搜索应用或窗口标题" placeholder="搜索应用、窗口标题…" maxlength="500" /><kbd>Ctrl K</kbd><button v-if="q" class="icon-button" aria-label="清除搜索" @click="q = ''"><AppIcon name="close" :size="16" /></button></div><div class="filter-bar"><div class="date-chips" role="group" aria-label="日期筛选"><button v-for="tab in [{ id: 'all', label: '全部' }, { id: 'today', label: '今天' }, { id: 'yesterday', label: '昨天' }, { id: 'week', label: '近 7 天' }, { id: 'custom', label: '自定义' }]" :key="tab.id" :class="{ active: preset === tab.id }" :aria-pressed="preset === tab.id" @click="preset = tab.id">{{ tab.label }}</button></div><select v-if="view === 'history'" v-model="appId" aria-label="应用筛选"><option value="">全部应用</option><option v-for="app in apps" :key="app.appId" :value="app.appId">{{ app.appName }}</option></select></div><div v-if="preset === 'custom'" class="date-range custom-range"><input type="date" aria-label="开始日期" v-model="startDate" /><span>至</span><input type="date" aria-label="结束日期" v-model="endDate" /></div></template>
-        <section v-if="view === 'history'" class="history-section"><header class="section-heading"><h2>活动时间线 <span>{{ status.count }} 条本地记录</span></h2><button class="icon-button" aria-label="刷新时间线" @click="search(); timeline?.reset()"><AppIcon name="history" :size="16" /></button></header><div class="loading-line" :class="{ visible: loading }" role="status" :aria-label="loading ? '正在检索' : '检索完成'" /><HistoryTimeline ref="timeline" :records="records" :query="q" :loading="loading" :more="!!nextCursor" @detail="detail = $event" @more="search(true)" /></section>
-        <StatisticsView v-else-if="view === 'statistics'" :stats="stats" />
-        <SettingsView v-else :settings="settings" :busy="busy" :directory="status.directory" @save="updateSettings" @remove="confirmation = $event" @export="exportData" />
-      </template>
-      <footer class="app-footer"><span><AppIcon name="shield" :size="12" /> 本地保存 · {{ settings.retentionDays }} 天保留</span><span v-if="view === 'history'" class="keyboard-hint">↑↓ 选择 <kbd>Enter</kbd> 详情 <kbd>Esc</kbd> 返回</span><span v-else>HostXit</span></footer><p class="runtime-note" :title="status.message">{{ status.message || '仅在插件进程运行期间记录，不启用系统自启动' }}</p>
-    </main>
-    <ModalDialog v-if="detail" title="活动详情" @close="detail = undefined"><div class="detail-app"><span class="app-avatar">{{ detail.appName.slice(0, 1).toUpperCase() }}</span><div><h3>{{ detail.appName }}</h3><p>{{ detail.processName }}</p></div></div><p class="detail-title">{{ detail.windowTitle || '无可读取标题' }}</p><dl class="detail-meta"><div><dt>开始</dt><dd>{{ dayLabel(detail.startedAt) }} {{ timeLabel(detail.startedAt) }}</dd></div><div><dt>结束</dt><dd>{{ dayLabel(detail.endedAt) }} {{ timeLabel(detail.endedAt) }}</dd></div><div><dt>已观察时长</dt><dd>{{ duration(detail.durationMs) }}</dd></div></dl><p class="scope-note">窗口标题不包含可信 URL 或文件路径，因此无法直接重新打开。</p><div class="button-group"><button class="button primary" @click="copyTitle">复制标题</button><button class="button" :disabled="busy" @click="excludeApp">排除此应用</button><button class="button danger-text" @click="confirmation = { ids: [detail.id] }"><AppIcon name="trash" :size="15" /> 删除</button></div></ModalDialog>
-    <ModalDialog v-if="confirmation" title="确认删除历史？" @close="confirmation = undefined"><p class="confirm-copy">{{ confirmation.all ? '将永久删除所有本地历史。' : confirmation.ids ? '将永久删除这条记录。' : '将永久删除所选日期范围内的记录。' }}此操作无法撤销，已导出的文件不会被删除。</p><div class="button-group"><button class="button" :disabled="busy" @click="confirmation = undefined">取消</button><button class="button destructive" :disabled="busy" @click="confirmDeletion">{{ busy ? '删除中…' : '确认删除' }}</button></div></ModalDialog>
-  </div>
+  <main class="app-shell">
+    <header class="tool-header">
+      <div class="search-box"><AppIcon name="search" :size="19" /><input ref="searchInput" v-model="q" aria-label="搜索应用或窗口标题" placeholder="搜索应用、窗口标题…" maxlength="500" :aria-activedescendant="timeline?.selectedId" aria-controls="history-results" @focus="view !== 'history' && returnToHistory()" /><button v-if="q" class="icon-button" aria-label="清除搜索" @click="q = ''; focusSearch()"><AppIcon name="close" :size="16" /></button></div>
+      <button class="status-pill" :class="status.state" :title="`${status.message || '仅在插件进程存活期间记录'}；点击暂停或继续`" :disabled="busy || !ready || !settings.consent" @click="toggle"><span class="status-dot" />{{ labels[status.state] }}<AppIcon :name="status.state === 'recording' ? 'pause' : 'play'" :size="14" /></button>
+      <div class="more-controls"><button class="icon-button more-trigger" aria-label="更多操作" aria-haspopup="menu" :aria-expanded="menuOpen" @click="toggleMenu">•••</button><div v-if="menuOpen" ref="menu" class="tool-menu" role="menu" aria-label="更多操作" @keydown="menuKeyboard"><button role="menuitem" :disabled="!ready" @click="openView('settings')"><AppIcon name="settings" :size="16" />设置</button><button role="menuitem" :disabled="!ready" @click="openView('statistics')"><AppIcon name="chart" :size="16" />统计</button><button role="menuitem" :disabled="!ready || !settings.consent" @click="exportFormat('json')"><AppIcon name="download" :size="16" />导出 JSON</button><button role="menuitem" :disabled="!ready || !settings.consent" @click="exportFormat('csv')"><AppIcon name="download" :size="16" />导出 CSV</button></div></div>
+    </header>
+
+    <div class="tool-toolbar">
+      <template v-if="view === 'history' || view === 'statistics'"><select v-model="preset" aria-label="日期筛选"><option value="all">全部日期</option><option value="today">今天</option><option value="yesterday">昨天</option><option value="week">近 7 天</option><option value="custom">自定义日期</option></select><select v-if="view === 'history'" v-model="appId" aria-label="应用筛选"><option value="">全部应用</option><option v-for="app in apps" :key="app.appId" :value="app.appId">{{ app.appName }}</option></select></template>
+      <button v-if="view !== 'history'" class="back-button" @click="returnToHistory">← 返回历史 <kbd>Esc</kbd></button>
+      <span v-if="view === 'history'" class="record-count">{{ status.count }} 条记录</span><span v-else class="secondary-title">{{ view === 'settings' ? '设置' : '应用统计' }}</span>
+    </div>
+    <div v-if="preset === 'custom' && view !== 'settings'" class="date-range custom-range"><input type="date" aria-label="开始日期" v-model="startDate" /><span>至</span><input type="date" aria-label="结束日期" v-model="endDate" /></div>
+    <div v-if="error" class="error-banner" role="alert"><span>{{ error }}</span><button class="button subtle" @click="initialize">重试</button></div>
+    <div v-if="notice" class="notice" role="status"><span>{{ notice }}</span><button class="icon-button" aria-label="关闭通知" @click="notice = ''"><AppIcon name="close" :size="14" /></button></div>
+
+    <section v-if="view === 'history'" class="history-section" aria-label="操作历史">
+      <OnboardingView v-if="ready && !settings.consent" :busy="busy" :retention-days="settings.retentionDays" @start="startRecording" @settings="openView('settings')" />
+      <div class="loading-line" :class="{ visible: loading }" role="status" :aria-label="loading ? '正在检索' : '检索完成'" />
+      <HistoryTimeline ref="timeline" :records="records" :query="q" :loading="loading" :more="!!nextCursor" :enabled="settings.consent" @detail="detail = $event" @more="search(true)" />
+    </section>
+    <StatisticsView v-else-if="view === 'statistics'" :stats="stats" />
+    <SettingsView v-else :settings="settings" :busy="busy" :directory="status.directory" @save="updateSettings" @remove="confirmation = $event" @export="exportData" />
+
+    <footer class="tool-footer"><span :title="status.message || '仅在插件进程存活期间记录，不安装自启动'">本地保存 · {{ settings.retentionDays }} 天</span><span class="keyboard-hint">↑↓ 选择 · Enter 详情 · Esc 返回</span></footer>
+
+    <ModalDialog v-if="detail" title="活动详情" @close="detail = undefined"><div class="detail-app"><span class="app-avatar">{{ detail.appName.slice(0, 1).toUpperCase() }}</span><h3>{{ detail.appName }}</h3></div><p class="detail-title">{{ detailText }}</p><div v-if="detailPages > 1" class="pagination" aria-label="标题分页"><button class="button" :disabled="detailPage === 0" @click="detailPage--">上一段</button><span>{{ detailPage + 1 }}/{{ detailPages }}</span><button class="button" :disabled="detailPage + 1 >= detailPages" @click="detailPage++">下一段</button></div><dl class="detail-meta"><div><dt>开始</dt><dd>{{ dayLabel(detail.startedAt) }} {{ timeLabel(detail.startedAt) }}</dd></div><div><dt>结束</dt><dd>{{ dayLabel(detail.endedAt) }} {{ timeLabel(detail.endedAt) }}</dd></div><div><dt>已观察时长</dt><dd>{{ duration(detail.durationMs) }}</dd></div></dl><p class="scope-note">无可信 URL / 文件路径，不能直接重新打开。</p><div class="button-group"><button class="button primary" @click="copyTitle">复制标题</button><button class="button" :disabled="busy" @click="excludeApp">排除此应用</button><button class="button danger-text" @click="confirmation = { ids: [detail.id] }">删除</button></div></ModalDialog>
+    <ModalDialog v-if="confirmation" title="确认删除历史？" @close="confirmation = undefined"><p class="confirm-copy">{{ confirmation.all ? '永久删除所有本地历史。' : confirmation.ids ? '永久删除这条记录。' : '永久删除所选日期范围内的记录。' }}无法撤销，已导出文件不会被删除。</p><div class="button-group"><button class="button" :disabled="busy" @click="confirmation = undefined">取消</button><button class="button destructive" :disabled="busy" @click="confirmDeletion">{{ busy ? '删除中…' : '确认删除' }}</button></div></ModalDialog>
+  </main>
 </template>

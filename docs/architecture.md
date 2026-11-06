@@ -18,6 +18,8 @@
 
 原 M1 `controller.cjs` 和限时运行参数保留，用于独立实验。原模板 `Hello`、`ReadText` 组件仍保留为源码参考，已不挂载到主产品页面；`src/styles/` 是当前样式入口。
 
+当前 UI 为单列桌面工具：顶部搜索/状态、单行筛选、56px 虚拟列表；首次同意嵌入历史区。设置/统计/导出由次级菜单进入，设置分组、统计与长标题分页，因此不建立网页式长滚动容器。键盘与焦点规则见 desktop-interactions.md；本轮未改采集/存储契约。
+
 ## 记录与设置
 
 SQLite `PRAGMA user_version=1`。`activity_events` 包含 id、app_id、app_name、process_name、window_title、started_at、ended_at，时间为 epoch ms，结束时间不得早于开始时间。所有已写记录均有结束时间（最后实际观察时间），没有跨重启悬挂的“进行中”记录。索引为 `(started_at DESC,id DESC)` 与 `(app_id,started_at DESC)`。

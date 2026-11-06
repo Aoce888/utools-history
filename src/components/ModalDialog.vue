@@ -7,7 +7,8 @@ const panel = ref<HTMLElement>(); let previous: HTMLElement | null
 onMounted(() => { previous = document.activeElement as HTMLElement; panel.value?.focus() })
 onUnmounted(() => previous?.focus())
 function trap(event: KeyboardEvent) {
-  if (event.key === 'Escape') { event.stopPropagation(); emit('close'); return }
+  if (event.isComposing) return
+  if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); emit('close'); return }
   if (event.key !== 'Tab') return
   const elements = panel.value?.querySelectorAll<HTMLElement>('button:not(:disabled), input, select, textarea, a[href]')
   if (!elements?.length) { event.preventDefault(); return }

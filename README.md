@@ -22,7 +22,7 @@
 ![浅色界面（测试数据）](docs/screenshots/history-light-test-fixtures.png)
 ![深色界面（测试数据）](docs/screenshots/history-dark-test-fixtures.png)
 
-首次使用现为紧凑隐私说明，无需滚动即可开始记录；启用后进入时间线并聚焦搜索。已覆盖 800×544、600×400、480×360 CSS 窗口和 DPR 1/1.25/1.5 浏览器模拟，不能替代 Windows/uTools 的真实显示缩放测试。见 [渲染修复记录](docs/rendering-review.md)。
+默认界面直接是搜索和历史列表，无侧栏和欢迎页。首次使用仅在列表上方显示隐私确认；搜索框在首次及再次进入时自动聚焦。日期/应用筛选与记录状态常驻，设置、统计和导出在右上角「更多操作」。已覆盖 800×544、600×400、480×360 CSS 窗口和 DPR 1/1.25/1.5 浏览器模拟，不能替代 Windows/uTools 的真实显示缩放测试。见 [桌面交互说明](docs/desktop-interactions.md)。
 
 ## 安装与运行
 
