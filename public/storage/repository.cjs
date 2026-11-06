@@ -92,7 +92,8 @@ async function openRepository({ file, SQL, io = fs }) {
     search(params = {}) {
       const { conditions, values } = filters(params);
       if (params.frequent) {
-        const result = rows(db, 'SELECT e.* FROM activity_events e JOIN (SELECT app_id, MAX(id) AS latest_id, COUNT(*) AS uses FROM activity_events GROUP BY app_id) a ON e.id=a.latest_id ORDER BY a.uses DESC,e.started_at DESC LIMIT 80');
+        const scoped = filters({ from: params.from, to: params.to });
+        const result = rows(db, `SELECT e.* FROM activity_events e JOIN (SELECT app_id, MAX(id) AS latest_id, COUNT(*) AS uses FROM activity_events ${scoped.conditions.length ? 'WHERE ' + scoped.conditions.join(' AND ') : ''} GROUP BY app_id) a ON e.id=a.latest_id ORDER BY a.uses DESC,e.started_at DESC LIMIT 80`, scoped.values);
         return { items: result.map(record), total: result.length };
       }
       const limit = params.limit ?? 80;

@@ -5,6 +5,7 @@ import { useHistory } from './stores/useHistory'
 import { duration, dayLabel, timeLabel } from './domain/format'
 import AppIcon from './components/AppIcon.vue'
 import HistoryTimeline from './components/HistoryTimeline.vue'
+import ApplicationBadge from './components/ApplicationBadge.vue'
 import ModalDialog from './components/ModalDialog.vue'
 import OnboardingView from './views/OnboardingView.vue'
 import SettingsView from './views/SettingsView.vue'
@@ -14,6 +15,17 @@ const history = useHistory()
 const { frequent, settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, matchTotal, queryFailed, q, preset, startDate, endDate, appId, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose } = history
 const view = ref('history'), menuOpen = ref(false), detail = ref<ActivityRecord>(), confirmation = ref<DeleteQuery>(), notice = ref('')
 const shortcut = ref('history')
+const frequentPeriod = ref('today')
+function setFrequentPeriod(period: string) {
+  frequentPeriod.value = period
+  q.value = ''; appId.value = ''; preset.value = period === 'history' ? 'all' : period === 'week' ? 'custom' : 'today'
+  if (period === 'week') {
+    const now = new Date(); const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (now.getDay() + 6) % 7)
+    const localDate = (date: Date) => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+    startDate.value = localDate(start); endDate.value = localDate(now)
+  }
+  void search()
+}
 const hostDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 const isDark = computed(() => settings.value.theme === 'dark' || (settings.value.theme !== 'light' && hostDark.value))
 function syncHostTheme(event: MediaQueryListEvent) { hostDark.value = event.matches }
@@ -51,7 +63,7 @@ function returnToHistory() { frequent.value = false; view.value = 'history'; sho
 function resetFilters() { q.value = ''; preset.value = 'all'; appId.value = ''; startDate.value = ''; endDate.value = ''; timeline.value?.reset() }
 function showAllHistory() { resetFilters(); returnToHistory() }
 function activateSearch() { returnToHistory(); shortcut.value = 'search' }
-function showFrequent() { resetFilters(); view.value = 'history'; shortcut.value = 'frequent'; frequent.value = true; void search() }
+function showFrequent() { resetFilters(); view.value = 'history'; shortcut.value = 'frequent'; frequent.value = true; setFrequentPeriod(frequentPeriod.value) }
 function openView(value: string) { menuOpen.value = false; view.value = value; shortcut.value = value }
 function toggleMenu() { menuOpen.value = !menuOpen.value; if (menuOpen.value) nextTick(() => menu.value?.querySelector<HTMLButtonElement>('button')?.focus()) }
 function menuKeyboard(event: KeyboardEvent) {
@@ -72,7 +84,7 @@ watch(detail, () => { detailPage.value = 0 })
 watch([q, preset, startDate, endDate, appId], () => {
   clearTimeout(debounce)
   if (ready.value) loading.value = true
-  debounce = setTimeout(() => { timeline.value?.reset(); if (ready.value) { if (shortcut.value === 'frequent' && hasFilters.value) { frequent.value = false; shortcut.value = 'history' }; void search(); if (view.value === 'statistics') void refreshStats() } }, 120)
+  debounce = setTimeout(() => { timeline.value?.reset(); if (ready.value) { void search(); if (view.value === 'statistics') void refreshStats() } }, 120)
 })
 watch(view, async value => { if (value === 'statistics') await refreshStats(); if (value === 'history') focusSearch() })
 function keyboard(event: KeyboardEvent) {
@@ -116,19 +128,19 @@ onUnmounted(() => { clearTimeout(noticeTimer); window.matchMedia('(prefers-color
       <nav class="shortcut-bottom" aria-label="记录与设置"><button class="shortcut-button" :title="isDark ? '切换到日间模式' : '切换到夜间模式'" :aria-label="isDark ? '切换到日间模式' : '切换到夜间模式'" :disabled="!ready || busy" @click="toggleAppearance"><AppIcon :name="isDark ? 'moon' : 'sun'" /><span>{{ isDark ? '夜间' : '日间' }}</span></button><button class="shortcut-button" :aria-current="shortcut === 'settings' ? 'page' : undefined" title="设置：记录偏好、排除与数据管理" aria-label="设置" :disabled="!ready" @click="openView('settings')"><AppIcon name="settings" /><span>设置</span></button></nav>
     </aside>
     <main class="workspace">
-    <header v-if="view === 'history'" class="tool-header">
+    <header v-if="view === 'history' && !frequent" class="tool-header">
       <div class="search-box"><AppIcon name="search" :size="19" /><input ref="searchInput" v-model="q" aria-label="搜索应用或窗口标题" placeholder="搜索应用、窗口标题…" maxlength="500" :aria-activedescendant="timeline?.selectedId" aria-controls="history-results" @focus="view !== 'history' && returnToHistory()" /><button v-if="q" class="icon-button" aria-label="清除搜索" @click="q = ''; focusSearch()"><AppIcon name="close" :size="16" /></button></div>
           <button v-if="view === 'history'" class="status-pill" :class="status.state" :title="`${status.message || '仅在插件进程存活期间记录'}；点击暂停或继续`" :disabled="busy || !ready || !settings.consent" @click="toggle"><AppIcon :name="status.state === 'paused' ? 'pause' : 'play'" :size="16" />{{ labels[status.state] }}</button>
     </header>
 
     <div v-if="view !== 'settings'" class="tool-toolbar">
-      <template v-if="view === 'history' || view === 'statistics'"><select v-model="preset" aria-label="日期筛选"><option value="all">全部日期</option><option value="today">今天</option><option value="yesterday">昨天</option><option value="week">近 7 天</option><option value="custom">自定义日期</option></select><select v-if="view === 'history'" v-model="appId" aria-label="应用筛选"><option value="">全部应用</option><option v-for="app in apps" :key="app.appId" :value="app.appId">{{ app.appName }}</option></select></template>
+      <div v-if="frequent" class="secondary-tabs frequent-tabs"><button v-for="period in [{ id: 'today', label: '今日' }, { id: 'week', label: '本周' }, { id: 'history', label: '历史' }]" :key="period.id" :aria-pressed="frequentPeriod === period.id" @click="setFrequentPeriod(period.id)">{{ period.label }}</button></div><template v-else-if="view === 'history' || view === 'statistics'"><select v-model="preset" aria-label="日期筛选"><option value="all">全部日期</option><option value="today">今天</option><option value="yesterday">昨天</option><option value="week">近 7 天</option><option value="custom">自定义日期</option></select><select v-if="view === 'history'" v-model="appId" aria-label="应用筛选"><option value="">全部应用</option><option v-for="app in apps" :key="app.appId" :value="app.appId">{{ app.appName }}</option></select></template>
       <span v-if="view === 'history'" class="record-count" :title="`本地共 ${status.count} 条记录；此处显示当前筛选的匹配数`">{{ resultLabel }}</span>
 
       <div v-if="view === 'history'" class="more-controls"><button class="icon-button more-trigger" aria-label="更多操作" title="导出当前日期范围" aria-haspopup="menu" :aria-expanded="menuOpen" @click="toggleMenu">•••</button><div v-if="menuOpen" ref="menu" class="tool-menu" role="menu" aria-label="更多操作" @keydown="menuKeyboard"><button role="menuitem" :disabled="!ready || !settings.consent" @click="exportFormat('json')"><AppIcon name="download" :size="16" />导出 JSON</button><button role="menuitem" :disabled="!ready || !settings.consent" @click="exportFormat('csv')"><AppIcon name="download" :size="16" />导出 CSV</button></div></div>
 
     </div>
-    <div v-if="preset === 'custom' && view !== 'settings'" class="date-range custom-range"><input type="date" aria-label="开始日期" v-model="startDate" /><span>至</span><input type="date" aria-label="结束日期" v-model="endDate" /></div>
+    <div v-if="preset === 'custom' && view !== 'settings' && !frequent" class="date-range custom-range"><input type="date" aria-label="开始日期" v-model="startDate" /><span>至</span><input type="date" aria-label="结束日期" v-model="endDate" /></div>
     <div v-if="view === 'history' && appId" class="app-recording-control"><span>{{ apps.find(app => app.appId === appId)?.appName || appId }}</span><button class="button" role="switch" :aria-checked="!selectedAppExcluded" :disabled="busy" @click="toggleSelectedApp">{{ selectedAppExcluded ? '记录已关闭' : '记录已开启' }}</button></div>
     <div v-if="error" class="error-banner" role="alert"><span>{{ error }}</span><button class="button subtle" @click="initialize">重试</button></div>
     <div v-if="notice" class="notice" role="status"><span>{{ notice }}</span><button class="icon-button" aria-label="关闭通知" @click="notice = ''"><AppIcon name="close" :size="14" /></button></div>
@@ -136,7 +148,7 @@ onUnmounted(() => { clearTimeout(noticeTimer); window.matchMedia('(prefers-color
     <section v-if="view === 'history'" class="history-section" aria-label="操作历史">
       <OnboardingView v-if="ready && !settings.consent" :busy="busy" :retention-days="settings.retentionDays" @start="startRecording" @settings="openView('settings')" />
       <div class="loading-line" :class="{ visible: loading }" role="status" :aria-label="loading ? '正在检索' : '检索完成'" />
-      <HistoryTimeline :frequent="frequent" ref="timeline" :records="records" :query="q" :loading="loading" :more="!!nextCursor" :enabled="settings.consent" :filtered="hasFilters" :failed="queryFailed" @reopen="reopenApp" @detail="detail = $event" @more="search(true)" @clear="resetFilters(); focusSearch()" />
+      <div v-if="frequent" class="frequent-grid"><button v-for="item in records" :key="item.appId" class="frequent-tile" @click="reopenApp(item)"><ApplicationBadge :id="item.id" :name="item.appName" /><span>{{ item.appName }}</span></button><p v-if="!loading && !records.length" class="empty-state">暂无记录</p></div><HistoryTimeline v-else :frequent="frequent" ref="timeline" :records="records" :query="q" :loading="loading" :more="!!nextCursor" :enabled="settings.consent" :filtered="hasFilters" :failed="queryFailed" @reopen="reopenApp" @detail="detail = $event" @more="search(true)" @clear="resetFilters(); focusSearch()" />
     </section>
     <StatisticsView v-else-if="view === 'statistics'" :stats="stats" />
     <SettingsView v-else :settings="settings" :busy="busy" :directory="status.directory" @save="updateSettings" @remove="confirmation = $event" @export="exportData" />

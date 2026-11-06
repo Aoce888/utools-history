@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Changed
+- Display Frequent as compact app tiles with Today, This Week (local Monday through today), and History frequency sorting; remove explanatory row text.
 - Make Frequent an application launcher: display app icons/names without long window titles, and open the application on click or Enter. Full record details remain in History.
 
 ### Fixed
