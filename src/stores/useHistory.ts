@@ -8,6 +8,7 @@ export function useHistory() {
   const status = ref<ServiceStatus>({ state: 'unavailable', message: '', revision: 0, count: 0 })
   const records = ref<ActivityRecord[]>([]), apps = ref<AppSummary[]>([]), stats = ref<AppStats[]>([])
   const error = ref(''), loading = ref(false), busy = ref(false), ready = ref(false), nextCursor = ref<string>()
+  const matchTotal = ref<number>()
   const q = ref(''), preset = ref('all'), startDate = ref(''), endDate = ref(''), appId = ref('')
   const range = computed(() => dateRange(preset.value, startDate.value, endDate.value))
   let request = 0, alive = true
@@ -24,9 +25,10 @@ export function useHistory() {
       const page = await unwrap(bridge?.search({ ...range.value, q: q.value.trim(), appId: appId.value || undefined, cursor: more ? nextCursor.value : undefined, limit: 80 }))
       if (token !== request || !alive) return
       records.value = more ? [...records.value, ...page.items] : page.items
+      matchTotal.value = Number.isSafeInteger(page.total) && page.total! >= 0 ? page.total : undefined
       nextCursor.value = page.nextCursor
       error.value = ''
-    } catch (e) { if (token === request && alive) { error.value = (e as Error).message; if (!more) { records.value = []; nextCursor.value = undefined } } }
+    } catch (e) { if (token === request && alive) { error.value = (e as Error).message; if (!more) { records.value = []; nextCursor.value = undefined; matchTotal.value = undefined } } }
     finally { if (token === request && alive) loading.value = false }
   }
   async function refreshStatus() { status.value = await unwrap(bridge?.status()) }
@@ -39,7 +41,7 @@ export function useHistory() {
     try {
       await refreshStatus(); settings.value = await unwrap(bridge?.getSettings()); apps.value = await unwrap(bridge?.apps()); ready.value = true
       error.value = ''
-      if (settings.value.consent) await search()
+      await search()
     } catch (e) { error.value = (e as Error).message }
     finally { loading.value = false }
   }
@@ -60,5 +62,5 @@ export function useHistory() {
       const link = document.createElement('a'); link.href = url; link.download = `utools-history-${new Date().toISOString().slice(0, 10)}.${format}`; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (e) { error.value = (e as Error).message }
   }
-  return { settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, q, preset, startDate, endDate, appId, range, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose() { alive = false; request++ } }
+  return { settings, status, records, apps, stats, error, loading, busy, ready, nextCursor, matchTotal, q, preset, startDate, endDate, appId, range, search, refreshStatus, refreshStats, initialize, updateSettings, toggle, remove, exportData, dispose() { alive = false; request++ } }
 }

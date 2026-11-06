@@ -19,6 +19,10 @@ test('SQLite survives reopening, preserves settings and supports literal search 
     assert.equal(repo.search({ q: '%' }).items.length, 1); assert.equal(repo.search({ q: "' OR" }).items.length, 1);
     assert.equal(repo.search({ q: '中文' }).items.length, 1);
     const page = repo.search({ limit: 2 }); assert.equal(page.items.length, 2);
+    assert.equal(page.total, 3);
+    assert.equal(repo.search({ q: 'missing' }).total, 0);
+    assert.equal(repo.search({ q: '%' }).total, 1);
+    assert.equal(repo.search({ cursor: page.nextCursor, limit: 2 }).total, 3);
     assert.equal(repo.search({ cursor: page.nextCursor, limit: 2 }).items.length, 1);
     assert.equal(repo.search({ from: 1000, to: 2000 }).items.length, 2);
     assert.equal(repo.stats({ from: 1050, to: 2050 })[0].durationMs, 150);

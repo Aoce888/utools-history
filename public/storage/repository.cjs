@@ -89,6 +89,7 @@ async function openRepository({ file, SQL, io = fs }) {
       const { conditions, values } = filters(params);
       const limit = params.limit ?? 80;
       if (!Number.isInteger(limit) || limit < 1 || limit > 200) throw Error('Invalid page size');
+      const total = rows(db, `SELECT COUNT(*) AS count FROM activity_events ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''}`, values)[0].count;
       if (params.cursor) {
         const match = /^(\d+):(\d+)$/.exec(params.cursor);
         if (!match || !match.slice(1).every(v => Number.isSafeInteger(Number(v)))) throw Error('Invalid cursor');
@@ -96,7 +97,7 @@ async function openRepository({ file, SQL, io = fs }) {
       }
       const result = rows(db, `SELECT * FROM activity_events ${conditions.length ? 'WHERE ' + conditions.join(' AND ') : ''} ORDER BY started_at DESC, id DESC LIMIT ?`, [...values, limit + 1]);
       const items = result.slice(0, limit).map(record), last = items.at(-1);
-      return { items, nextCursor: result.length > limit ? `${last.startedAt}:${last.id}` : undefined };
+      return { items, total, nextCursor: result.length > limit ? `${last.startedAt}:${last.id}` : undefined };
     },
     stats(params) {
       const from = params.from, to = params.to;
