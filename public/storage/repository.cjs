@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const DEFAULT_SETTINGS = { consent: false, paused: false, retentionDays: 30, idleSeconds: 300, excludedApps: [], theme: 'system' };
+const DEFAULT_SETTINGS = { consent: false, paused: false, retentionDays: 30, idleSeconds: 300, excludedApps: [] };
 function validateSettings(patch) {
   if (!patch || typeof patch !== 'object' || Array.isArray(patch)) throw Error('Invalid settings');
   const result = {};
@@ -8,7 +8,6 @@ function validateSettings(patch) {
     if (['consent', 'paused'].includes(key) && typeof value === 'boolean') result[key] = value;
     else if (key === 'retentionDays' && Number.isInteger(value) && value >= 1 && value <= 3650) result[key] = value;
     else if (key === 'idleSeconds' && Number.isInteger(value) && value >= 30 && value <= 3600) result[key] = value;
-    else if (key === 'theme' && ['system', 'light', 'dark'].includes(value)) result[key] = value;
     else if (key === 'excludedApps' && Array.isArray(value) && value.length <= 200 && value.every(v => typeof v === 'string' && v.length > 0 && v.length <= 260)) result[key] = [...new Set(value.map(v => v.trim().toLowerCase()).filter(Boolean))];
     else throw Error(`Invalid setting: ${key}`);
   }
@@ -53,6 +52,9 @@ async function openRepository({ file, SQL, io = fs }) {
   } catch (error) { db.close(); throw error; }
   let dirty = !exists;
   let settings = { ...DEFAULT_SETTINGS, excludedApps: [] };
+  if (rows(db, "SELECT key FROM app_settings WHERE key = 'theme'").length) {
+    db.run("DELETE FROM app_settings WHERE key = 'theme'"); dirty = true;
+  }
   for (const row of rows(db, 'SELECT * FROM app_settings')) Object.assign(settings, validateSettings({ [row.key]: JSON.parse(row.value_json) }));
   function flush() {
     if (!dirty || !file) return;

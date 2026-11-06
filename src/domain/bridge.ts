@@ -22,7 +22,7 @@ export interface ActivityRecord {
 }
 export interface Settings {
   consent: boolean; paused: boolean; retentionDays: number; idleSeconds: number;
-  excludedApps: string[]; theme: 'system' | 'light' | 'dark';
+  excludedApps: string[];
 }
 export interface SearchQuery { q?: string; from?: number; to?: number; appId?: string; limit?: number; cursor?: string }
 export interface SearchPage { items: ActivityRecord[]; total?: number; nextCursor?: string }

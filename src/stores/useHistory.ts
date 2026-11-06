@@ -4,7 +4,7 @@ import { dateRange } from '../domain/format'
 
 export function useHistory() {
   const bridge = window.historyBridge
-  const settings = ref<Settings>({ consent: false, paused: false, retentionDays: 30, idleSeconds: 300, excludedApps: [], theme: 'system' })
+  const settings = ref<Settings>({ consent: false, paused: false, retentionDays: 30, idleSeconds: 300, excludedApps: [] })
   const status = ref<ServiceStatus>({ state: 'unavailable', message: '', revision: 0, count: 0 })
   const records = ref<ActivityRecord[]>([]), apps = ref<AppSummary[]>([]), stats = ref<AppStats[]>([])
   const error = ref(''), loading = ref(false), busy = ref(false), ready = ref(false), nextCursor = ref<string>()
