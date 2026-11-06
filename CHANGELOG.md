@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Replace the ambiguous reopen arrow with an explicit “打开应用” text button.
 - Place the reopen-application shortcut immediately after each record's time instead of beside its app icon.
 - Move appearance switching from the settings dropdown to a one-click sun/moon shortcut immediately above Settings in the sidebar.
 - Improve native select contrast and add the explicitly requested appearance selector at the top of settings: follow uTools (default), day or night.
