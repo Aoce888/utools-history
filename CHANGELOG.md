@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Move the uTools development entry and Vite server together to dedicated loopback port 5197, avoiding the Guanshi project already using 5173. Keep strict-port behavior and verify manifest/server consistency automatically.
 - Handle uTools `onPluginOut(true)` explicitly: stop capture, save the last snapshot and release the writer lock once. Hiding to background keeps the production service alive; shutdown during initialization closes a late runtime instead of exposing it.
 
 ### Added

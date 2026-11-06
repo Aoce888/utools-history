@@ -33,7 +33,7 @@ npm run check
 
 生产预览：在 uTools 开发者工具导入绝对路径 `dist/plugin.json`，搜索 **操作历史**。构建自动移除开发服务器配置，并包含 preload、采集脚本、SQLite WASM 及第三方许可。也可解压 `artifacts/utools-history-windows-preview.zip` 后导入其中的 `plugin.json`；这是开发者加载包，尚非商店安装包。
 
-开发热更新：执行 `npm run dev` 后导入 `public/plugin.json`。开发服务固定端口 5173，若占用请先识别占用服务，避免连错项目。普通浏览器仅显示宿主不可用提示，不生成虚假历史。
+开发热更新：执行 `npm run dev` 后导入 `public/plugin.json`。开发地址固定为 `http://127.0.0.1:5197`，与观市使用的 5173 分离；若 5197 被占用则明确失败，不自动换端口。更新后请在 uTools 开发者工具重新导入或刷新插件配置，结束旧实例后再打开。普通浏览器仅显示宿主不可用提示，不生成虚假历史。
 
 ## 检查命令
 
