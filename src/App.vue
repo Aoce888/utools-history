@@ -92,7 +92,7 @@ onUnmounted(() => { clearInterval(poll); clearTimeout(debounce); document.remove
     <main class="workspace">
     <header v-if="view === 'history'" class="tool-header">
       <div class="search-box"><AppIcon name="search" :size="19" /><input ref="searchInput" v-model="q" aria-label="搜索应用或窗口标题" placeholder="搜索应用、窗口标题…" maxlength="500" :aria-activedescendant="timeline?.selectedId" aria-controls="history-results" @focus="view !== 'history' && returnToHistory()" /><button v-if="q" class="icon-button" aria-label="清除搜索" @click="q = ''; focusSearch()"><AppIcon name="close" :size="16" /></button></div>
-          <button v-if="view === 'history'" class="status-pill" :class="status.state" :title="`${status.message || '仅在插件进程存活期间记录'}；点击暂停或继续`" :disabled="busy || !ready || !settings.consent" @click="toggle"><AppIcon :name="status.state === 'recording' ? 'pause' : 'play'" :size="16" />{{ labels[status.state] }}</button>
+          <button v-if="view === 'history'" class="status-pill" :class="status.state" :title="`${status.message || '仅在插件进程存活期间记录'}；点击暂停或继续`" :disabled="busy || !ready || !settings.consent" @click="toggle"><AppIcon :name="status.state === 'paused' ? 'pause' : 'play'" :size="16" />{{ labels[status.state] }}</button>
     </header>
 
     <div v-if="view !== 'settings'" class="tool-toolbar">

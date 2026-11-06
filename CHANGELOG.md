@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Distinguish current recording and paused states with a green dot and a pause glyph respectively, retaining the lightweight control.
 - Replace the heavy green recording button with a neutral compact control and a small green status indicator.
 - Make the recording state beside search easier to recognize with a full-height bordered button, stronger text and green recording background; retain neutral paused styling and host light/dark adaptation.
 - Move the recording toggle outside the search field on its right; show current recording/paused state rather than the next action, keeping the recording icon green.

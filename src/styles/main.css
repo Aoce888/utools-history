@@ -38,6 +38,8 @@ small, kbd { font-size: 11px; color: var(--muted); } kbd { font-family: inherit;
 .tool-header > .status-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
 .tool-header > .status-pill.recording::before { background: #219768; box-shadow: 0 0 0 3px #21976815; }
 .tool-header > .status-pill > svg { display: none; }
+.tool-header > .status-pill:not(.recording)::before { display: none; }
+.tool-header > .status-pill:not(.recording) > svg { display: block; color: var(--muted); }
 .tool-header > .status-pill:hover { background: var(--hover); border-color: var(--muted); }
 @media (prefers-color-scheme: dark) { .tool-header > .status-pill.recording::before { background: #66cf9b; box-shadow: 0 0 0 3px #66cf9b16; } }
 .more-controls { position: relative; flex-shrink: 0; }.more-trigger { width: 28px; height: 30px; letter-spacing: 1px; font-weight: 600; }
