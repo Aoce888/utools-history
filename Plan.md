@@ -234,17 +234,21 @@ interface HistoryBridge {
 
 ### M0 — 检查现有工程（先执行）
 
-- [ ] 检查 `package.json`、`vite.config.*`、`plugin.json` 和源码结构，不覆盖已有工程配置。
+> 2026-11-06：自动化检查已通过；uTools 加载与重载验收待执行，尚未完整验收。见 docs/test-plan.md。
+
+- [x] 检查 `package.json`、`vite.config.*`、`plugin.json` 和源码结构，不覆盖已有工程配置。
 - [ ] 确认 Vue、Vite、TypeScript 与 uTools 运行环境的兼容性。
 - [ ] 验证 `npm install`、`npm run dev`、`npm run build`（按实际脚本）。
-- [ ] 验证 `dist/` 内有可用 `index.html`、`plugin.json`、`logo.png`、`preload.js`（若引用）。
-- [ ] 建立 `docs/test-plan.md` 和可复现启动说明。
+- [x] 验证 `dist/` 内有可用 `index.html`、`plugin.json`、`logo.png`、`preload.js`（若引用）。
+- [x] 建立 `docs/test-plan.md` 和可复现启动说明。
 
 **验收：** uTools 开发者工具能加载一个最小页面；热更新或重载可用；构建没有报错。
 
 ### M1 — Windows 采集 Spike（最关键）
 
-- [ ] 实现小型 Windows 前台窗口读取原型，并记录应用名、窗口标题、时间戳。
+> 2026-11-06：原型已真实读取 10 条样本，CPU/内存测量见 docs/spike-measurement.json；后台、应用切换丢失率与延迟、休眠和 Windows 10 验收仍待执行。生产持续采集 No-Go；当前采用显式启动、退出即停止的限时实验。见 docs/feasibility.md。
+
+- [x] 实现小型 Windows 前台窗口读取原型，并记录应用名、窗口标题、时间戳。
 - [ ] 逐一验证最小化、窗口切换、浏览器、Office、资源管理器等场景。
 - [ ] 在退出插件主界面、关闭/重启 uTools、Windows 休眠唤醒时验证采集行为。
 - [ ] 对获取失败、无权限、空标题、系统进程做可解释降级。

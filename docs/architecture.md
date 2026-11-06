@@ -15,6 +15,6 @@ Host actions contain code, type and payload. File entries read payload[0].path. 
 
 Keep the starter intact during infrastructure work. Future UI, activity domain, persistence and platform adapters should be separate modules. Document actual record schemas and migrations when implemented. Plan.md describes requirements, not delivered behavior.
 
-## Known issue
+## M1 additions
 
-The file selection button calls undefined setFilePath. Track and fix separately with regression coverage. A successful build cannot detect all runtime failures.
+App.vue now renders the experiment controls and samples. public/collector/controller.cjs owns explicit-start state, protocol validation, bounded memory and process shutdown. foreground.ps1 owns Win32 reads. preload exposes the limited historySpike interface declared in src/domain/bridge.ts; UI code does not construct shell commands. No persistent activity schema exists yet. The old text-selection undefined function has been corrected; starter example components remain available as source references.

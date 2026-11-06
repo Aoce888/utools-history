@@ -1,0 +1,33 @@
+{
+  "measuredAt": "2026-11-06T07:23:10.438Z",
+  "os": "Windows_NT 10.0.22631",
+  "node": "v24.18.0",
+  "exitCode": 0,
+  "sampleCount": 10,
+  "distinctApplications": 1,
+  "statuses": {
+    "ok": 10
+  },
+  "firstSampleStartupMs": 400,
+  "sampleGapMs": [
+    1040,
+    1035,
+    1034,
+    1033,
+    1036,
+    1039,
+    1022,
+    1020,
+    1034
+  ],
+  "elapsedMs": 10741,
+  "limitations": [
+    "No controlled window-switch ground truth: loss and detection latency unmeasured.",
+    "No uTools lifecycle, Windows 10, lock or sleep validation."
+  ],
+  "helperResources": {
+    "cpuSeconds": 0.171875,
+    "peakWorkingSetBytes": 79409152,
+    "workingSetBytes": 79409152
+  }
+}
