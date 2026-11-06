@@ -23,7 +23,7 @@ const handleOpenDialog = () => {
   })
   if (!files) return
   const _filePath = files[0]
-  setFilePath(_filePath)
+  filePath.value = _filePath
 
   window.services.readText(_filePath).then((content) => {
     fileContent.value = content
