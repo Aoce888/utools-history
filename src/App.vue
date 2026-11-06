@@ -18,6 +18,11 @@ const hostDark = ref(window.matchMedia('(prefers-color-scheme: dark)').matches)
 const isDark = computed(() => settings.value.theme === 'dark' || (settings.value.theme !== 'light' && hostDark.value))
 function syncHostTheme(event: MediaQueryListEvent) { hostDark.value = event.matches }
 function toggleAppearance() { void updateSettings({ theme: isDark.value ? 'light' : 'dark' }) }
+async function reopenApp(item: ActivityRecord) {
+  const result = await window.historyBridge?.reopen(item.id)
+  if (!result?.ok) error.value = result?.error.message || '宿主打开能力不可用'
+  else notice.value = `已请求打开 ${item.appName}（不恢复原文件或网页）`
+}
 const hasFilters = computed(() => !!q.value.trim() || preset.value !== 'all' || !!appId.value)
 const resultLabel = computed(() => loading.value ? '检索中…' : queryFailed.value ? '读取失败' : matchTotal.value === undefined ? `已加载 ${records.value.length}${nextCursor.value ? '+' : ''} 条` : `${matchTotal.value} 条${hasFilters.value ? '匹配' : '记录'}`)
 const searchInput = ref<HTMLInputElement>(), menu = ref<HTMLElement>(), timeline = ref<InstanceType<typeof HistoryTimeline>>()
@@ -115,7 +120,7 @@ onUnmounted(() => { window.matchMedia('(prefers-color-scheme: dark)').removeEven
     <section v-if="view === 'history'" class="history-section" aria-label="操作历史">
       <OnboardingView v-if="ready && !settings.consent" :busy="busy" :retention-days="settings.retentionDays" @start="startRecording" @settings="openView('settings')" />
       <div class="loading-line" :class="{ visible: loading }" role="status" :aria-label="loading ? '正在检索' : '检索完成'" />
-      <HistoryTimeline ref="timeline" :records="records" :query="q" :loading="loading" :more="!!nextCursor" :enabled="settings.consent" :filtered="hasFilters" :failed="queryFailed" @detail="detail = $event" @more="search(true)" @clear="resetFilters(); focusSearch()" />
+      <HistoryTimeline ref="timeline" :records="records" :query="q" :loading="loading" :more="!!nextCursor" :enabled="settings.consent" :filtered="hasFilters" :failed="queryFailed" @reopen="reopenApp" @detail="detail = $event" @more="search(true)" @clear="resetFilters(); focusSearch()" />
     </section>
     <StatisticsView v-else-if="view === 'statistics'" :stats="stats" />
     <SettingsView v-else :settings="settings" :busy="busy" :directory="status.directory" @save="updateSettings" @remove="confirmation = $event" @export="exportData" />

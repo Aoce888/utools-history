@@ -49,6 +49,7 @@ async function openRepository({ file, SQL, io = fs }) {
       CREATE INDEX IF NOT EXISTS idx_events_started ON activity_events(started_at DESC, id DESC);
       CREATE INDEX IF NOT EXISTS idx_events_app_time ON activity_events(app_id, started_at DESC);
       CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value_json TEXT NOT NULL);
+      CREATE TABLE IF NOT EXISTS event_targets (event_id INTEGER PRIMARY KEY, executable TEXT NOT NULL);
       PRAGMA user_version = 1;`);
   } catch (error) { db.close(); throw error; }
   let dirty = !exists;
@@ -81,6 +82,8 @@ async function openRepository({ file, SQL, io = fs }) {
       db.run('INSERT INTO activity_events (app_id,app_name,process_name,window_title,started_at,ended_at) VALUES (?,?,?,?,?,?)', [event.appId, event.appName, event.processName, event.windowTitle, event.startedAt, event.endedAt]);
       dirty = true; return rows(db, 'SELECT last_insert_rowid() AS id')[0].id;
     },
+    setTarget(id, executable) { db.run('INSERT OR REPLACE INTO event_targets VALUES (?,?)', [id, executable]); dirty = true; },
+    target(id) { if (!Number.isSafeInteger(id)) throw Error('Invalid record'); return rows(db, 'SELECT executable FROM event_targets WHERE event_id=? AND EXISTS(SELECT 1 FROM activity_events WHERE id=?)', [id,id])[0]?.executable; },
     extend(id, endedAt) {
       if (!Number.isSafeInteger(id) || !Number.isSafeInteger(endedAt)) throw Error('Invalid event');
       db.run('UPDATE activity_events SET ended_at = ? WHERE id = ? AND ended_at <= ?', [endedAt, id, endedAt]); dirty = true;
@@ -116,10 +119,11 @@ async function openRepository({ file, SQL, io = fs }) {
       if (params.all !== true && !conditions.length) throw Error('Deletion scope required');
       db.run(`DELETE FROM activity_events ${params.all === true ? '' : 'WHERE ' + conditions.join(' AND ')}`, params.all === true ? [] : values);
       const deleted = db.getRowsModified(); dirty = true;
+      db.run('DELETE FROM event_targets WHERE event_id NOT IN (SELECT id FROM activity_events)');
       db.run('VACUUM'); flush(); return deleted;
     },
     prune(now = Date.now()) { return api.deleteBefore(now - settings.retentionDays * 86400000); },
-    deleteBefore(cutoff) { db.run('DELETE FROM activity_events WHERE ended_at < ?', [cutoff]); const n = db.getRowsModified(); if (n) { dirty = true; db.run('VACUUM'); flush(); } return n; }
+    deleteBefore(cutoff) { db.run('DELETE FROM activity_events WHERE ended_at < ?', [cutoff]); const n = db.getRowsModified(); if (n) { db.run('DELETE FROM event_targets WHERE event_id NOT IN (SELECT id FROM activity_events)'); dirty = true; db.run('VACUUM'); flush(); } return n; }
   };
   flush();
   return api;

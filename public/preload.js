@@ -14,6 +14,13 @@ function ready() {
   return initialization
 }
 window.historyBridge = {}
+let targets
+for (const method of ['appInfo', 'reopen']) {
+  window.historyBridge[method] = async id => {
+    try { const { service } = await ready(); targets ||= require(path.join(__dirname, 'service/targets.cjs')).createTargets(window.utools, service); return { ok: true, value: await targets[method](id) } }
+    catch (error) { return { ok: false, error: { code: 'APP_TARGET_ERROR', message: error.message } } }
+  }
+}
 for (const method of ['status', 'start', 'pause', 'getSettings', 'updateSettings', 'search', 'stats', 'apps', 'deleteRecords', 'exportRecords']) {
   window.historyBridge[method] = async params => {
     try {

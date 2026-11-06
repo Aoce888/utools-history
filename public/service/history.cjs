@@ -23,7 +23,10 @@ function createHistoryService({ repository: repo, collector, now = Date.now }) {
       if (same) { repo.extend(active.id, sample.timestamp); active.lastAt = sample.timestamp; }
       else {
         const event = { appId: app, appName: sample.appName, processName: sample.appName, windowTitle: sample.windowTitle.slice(0, 4096), startedAt: sample.timestamp, endedAt: sample.timestamp };
-        const id = repo.insert(event); active = { id, app, title: sample.windowTitle, pid: sample.processId, startedAt: sample.timestamp, lastAt: sample.timestamp };
+        const id = repo.insert(event);
+        const target = require('./targets.cjs').executablePath(sample.appPath);
+        if (target) repo.setTarget(id, target);
+        active = { id, app, title: sample.windowTitle, pid: sample.processId, startedAt: sample.timestamp, lastAt: sample.timestamp };
       }
       message = '仅在插件进程存活期间记录；关闭 uTools 后停止'; revision++;
     } catch (error) { fail(error); }
@@ -66,6 +69,7 @@ function createHistoryService({ repository: repo, collector, now = Date.now }) {
       revision++; return settings;
     },
     search: params => repo.search(params),
+    target: id => repo.target(id),
     stats: params => repo.stats(params),
     apps: () => repo.apps(),
     deleteRecords(params) { boundary(); const result = repo.deleteRecords(params); revision++; return result; },

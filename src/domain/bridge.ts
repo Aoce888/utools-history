@@ -35,6 +35,8 @@ export interface ServiceStatus {
 export interface DeleteQuery { ids?: number[]; from?: number; to?: number; all?: boolean }
 export type Reply<T> = { ok: true; value: T } | { ok: false; error: { code: string; message: string } };
 export interface HistoryBridge {
+  appInfo(id: number): Promise<Reply<{ canOpen: boolean; icon?: string }>>;
+  reopen(id: number): Promise<Reply<void>>;
   status(): Promise<Reply<ServiceStatus>>;
   start(): Promise<Reply<void>>;
   pause(): Promise<Reply<void>>;

@@ -27,16 +27,17 @@ while ($DurationSeconds -eq 0 -or $watch.Elapsed.TotalSeconds -lt $DurationSecon
   $title = New-Object Text.StringBuilder 4096
   $status = 'ok'
   $appName = 'Unknown application'
+  $appPath = ''
   if (-not [ForegroundProbe]::IsInteractive()) { $status = 'locked_or_secure_desktop' }
   elseif ($handle -eq [IntPtr]::Zero) { $status = 'no_foreground' }
   else {
     [void][ForegroundProbe]::GetWindowThreadProcessId($handle, [ref]$processNumber)
     [void][ForegroundProbe]::GetWindowText($handle, $title, $title.Capacity)
-    try { $appName = (Get-Process -Id $processNumber -ErrorAction Stop).ProcessName }
+    try { $processInfo = Get-Process -Id $processNumber -ErrorAction Stop; $appName = $processInfo.ProcessName; try { $appPath = $processInfo.Path } catch {} }
     catch { $status = 'process_unavailable' }
     if ($status -eq 'ok' -and $title.Length -eq 0) { $status = 'empty_title' }
   }
-  [ordered]@{timestamp=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds(); appName=$appName; processId=$processNumber; windowTitle=$title.ToString(); status=$status; idleMs=[ForegroundProbe]::IdleMilliseconds()} | ConvertTo-Json -Compress
+  [ordered]@{timestamp=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds(); appName=$appName; appPath=$appPath; processId=$processNumber; windowTitle=$title.ToString(); status=$status; idleMs=[ForegroundProbe]::IdleMilliseconds()} | ConvertTo-Json -Compress
   Start-Sleep -Milliseconds $IntervalMs
 }
 $self = Get-Process -Id $PID
