@@ -48,6 +48,7 @@ defineExpose({ move, openSelected, reset, selectedId })
         <ApplicationBadge :id="item.id" :name="item.appName" @reopen="emit('reopen', item)" />
         <div class="event-copy"><b><HighlightedText :text="item.windowTitle || '无可读取标题'" :query="query" /></b><span><HighlightedText :text="item.appName" :query="query" /></span></div>
         <div class="event-time"><b>{{ timeLabel(item.startedAt) }}</b><span>{{ dayLabel(item.startedAt) }}</span></div>
+        <ApplicationBadge :id="item.id" :name="item.appName" action-only @reopen="emit('reopen', item)" />
       </div>
     </div>
     <div v-if="more" class="load-more"><button class="button subtle" :disabled="loading" @click="emit('more')">{{ loading ? '正在加载…' : '加载更多记录' }}</button></div>
