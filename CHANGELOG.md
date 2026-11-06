@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Remove the same redundant back/status/export toolbar from settings; history and recording remain accessible through the fixed shortcut rail.
 - Simplify statistics to its date filter and results, removing the redundant title, back hint, recording status and export menu from that workspace.
 - Move recording status and the export menu from the workspace title to the right of the history result count.
 - Remove legacy independent theme preferences from the bridge and database settings; migrate old theme keys away. Appearance is solely a CSS mapping of the host-recommended prefers-color-scheme state.

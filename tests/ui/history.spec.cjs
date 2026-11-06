@@ -106,7 +106,7 @@ test('search, navigation, virtualization, details, pause, settings and deletion'
   await page.getByRole('button', { name: '本地数据', exact: true }).click();
   await page.getByRole('button', { name: '清空所有历史' }).click(); await page.getByRole('button', { name: '确认删除', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.getByRole('button', { name: /返回历史/ }).click();
+  await page.getByRole('button', { name: '历史', exact: true }).click();
   await expect(page.getByText('未找到历史记录')).toBeVisible();
 });
 test('responsive light/dark views remain within viewport', async ({ page }) => {
@@ -114,7 +114,7 @@ test('responsive light/dark views remain within viewport', async ({ page }) => {
   await expect(page.locator('.event-row').first()).toBeVisible();
   await page.screenshot({ path: 'docs/screenshots/history-light-test-fixtures.png' });
   await openSecondary(page, '设置'); await page.emulateMedia({ colorScheme: 'dark' });
-  await page.getByRole('button', { name: /返回历史/ }).click();
+  await page.getByRole('button', { name: '历史', exact: true }).click();
   await page.screenshot({ path: 'docs/screenshots/history-dark-test-fixtures.png' });
   await page.setViewportSize({ width: 600, height: 544 });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
