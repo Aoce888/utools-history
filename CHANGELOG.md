@@ -5,6 +5,7 @@ No official versions have been released.
 ## [Unreleased]
 
 ### Fixed
+- Place explicit “查看” and “再次打开” actions before each record's time.
 - Use “再次打开” for the history action, retaining the tooltip explaining that it launches the application without restoring the original document or page.
 - Replace the ambiguous reopen arrow with an explicit “打开应用” text button.
 - Place the reopen-application shortcut immediately after each record's time instead of beside its app icon.

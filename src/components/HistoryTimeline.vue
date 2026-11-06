@@ -47,8 +47,9 @@ defineExpose({ move, openSelected, reset, selectedId })
       <div v-for="(item, i) in visible" :key="item.id" :id="`history-result-${item.id}`" role="option" :aria-selected="selected === start + i" :tabindex="selected === start + i ? 0 : -1" class="event-row" :class="{ selected: selected === start + i }" :style="{ top: `${(start + i) * rowHeight}px`, height: `${rowHeight}px` }" @click="selected = start + i; openSelected()" :aria-label="`${item.appName} ${item.windowTitle} 查看详情`">
         <ApplicationBadge :id="item.id" :name="item.appName" @reopen="emit('reopen', item)" />
         <div class="event-copy"><b><HighlightedText :text="item.windowTitle || '无可读取标题'" :query="query" /></b><span><HighlightedText :text="item.appName" :query="query" /></span></div>
-        <div class="event-time"><b>{{ timeLabel(item.startedAt) }}</b><span>{{ dayLabel(item.startedAt) }}</span></div>
+        <button class="reopen-button" :aria-label="`查看 ${item.appName} 的记录详情`" @click.stop="selected = start + i; openSelected()">查看</button>
         <ApplicationBadge :id="item.id" :name="item.appName" action-only @reopen="emit('reopen', item)" />
+        <div class="event-time"><b>{{ timeLabel(item.startedAt) }}</b><span>{{ dayLabel(item.startedAt) }}</span></div>
       </div>
     </div>
     <div v-if="more" class="load-more"><button class="button subtle" :disabled="loading" @click="emit('more')">{{ loading ? '正在加载…' : '加载更多记录' }}</button></div>
